@@ -1,15 +1,21 @@
+// src/layouts/PublicLayout.tsx
+import React from "react";
 import { Outlet } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Navbar from "../components/Navbar"; // Assuming you have a Navbar
+import Footer from "../components/Footer"; // Assuming you have a Footer
 
-const PublicLayout = () => (
-  <div className="flex flex-col min-h-screen">
-    <Header />
-    <main className="flex-grow p-4">
-      <Outlet />
-    </main>
-    <Footer />
-  </div>
-);
+const PublicLayout: React.FC = () => {
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-grow">
+        {/* Added consistent horizontal padding and max-width for content */}
+        {/* The gradient is now applied to the body, so this container will sit on top of it */}
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
 
 export default PublicLayout;
