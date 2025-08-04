@@ -1,43 +1,34 @@
-import React from "react";
-import { Input } from "./ui/Input";
-import { Button } from "./ui/Button";
-
-const NewsletterSignup: React.FC = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle signup logic here (e.g., send email to backend)
-    alert("Thank you for signing up!");
-  };
-
+export default function NewsletterSignup() {
   return (
-    <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white p-8 rounded-xl shadow-xl flex flex-col items-center text-center max-w-lg w-full">
-      <h3 className="text-3xl font-bold mb-4">Join Our Newsletter!</h3>
-      <p className="text-base mb-6 opacity-90">
-        Get the latest health articles, society updates, and exclusive content
-        directly to your inbox.
-      </p>
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex flex-col sm:flex-row gap-3"
-      >
-        <Input
-          type="email"
-          placeholder="Your email address"
-          className="flex-grow bg-white text-gray-800 placeholder-gray-400 border-none rounded-full py-3 px-5 focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-blue-600 shadow-sm text-base"
-          required
-        />
-        <Button
-          type="submit"
-          className="bg-white text-blue-700 hover:bg-gray-100 font-semibold shadow-md hover:shadow-lg rounded-full px-6 py-3 text-base"
-        >
-          Subscribe Now
-        </Button>
-      </form>
-      <p className="text-xs mt-4 opacity-70">
-        We respect your privacy. Unsubscribe at any time.
-      </p>
-    </div>
+    <section className="py-12">
+      <div className="bg-blue-200 p-8 rounded-lg shadow-xl max-w-2xl mx-auto transform hover:scale-105 transition-transform duration-300">
+        <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="md:w-2/3 text-center md:text-left mb-6 md:mb-0">
+            <h3 className="text-3xl font-extrabold text-blue-900 mb-2">
+              Join Our Community
+            </h3>
+            <p className="text-blue-800">
+              Subscribe to our newsletter for the latest insights, events, and
+              news.
+            </p>
+          </div>
+          <div className="md:w-1/3">
+            <form className="space-y-4">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="w-full px-4 py-3 border border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+              >
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
   );
-};
-
-export default NewsletterSignup;
+}
