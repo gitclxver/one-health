@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Set;
 
 @Entity
+@Table(name = "article")
 public class article {
     @Id
     @GeneratedValue

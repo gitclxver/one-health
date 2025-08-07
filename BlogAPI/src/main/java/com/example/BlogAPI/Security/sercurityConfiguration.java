@@ -33,10 +33,15 @@ public class sercurityConfiguration {
                 //allows for POST, PUT, DELETE mappings with authentication
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize->{
-                    authorize.requestMatchers("user/login").permitAll();
-                    authorize.requestMatchers("user/signup").permitAll();
-                    authorize.requestMatchers("user/codeLogin").permitAll();
-                    authorize.requestMatchers(HttpMethod.POST ,"/Admin/addNewTeam").hasAuthority("ADMIN");
+                    authorize.requestMatchers(HttpMethod.POST,"/api/v1/user").permitAll();
+                    authorize.requestMatchers(HttpMethod.GET,"/api/v1/user/loginWithCode").permitAll();
+                    authorize.requestMatchers(HttpMethod.GET,"/api/v1/user/Login").permitAll();
+                    authorize.requestMatchers(HttpMethod.GET,"/api/v1/user/getAllusers").hasAuthority("ADMIN");
+                    authorize.requestMatchers(HttpMethod.GET,"/api/v1/user/getuser").hasAnyAuthority("ADMIN","COMMITTEE");
+                    authorize.requestMatchers(HttpMethod.GET,"/api/v1/articles/getAllArticles").hasAnyAuthority("ADMIN","COMMITTEE");
+                    authorize.requestMatchers(HttpMethod.DELETE,"/api/v1/articles/deleteAllArticles").hasAnyAuthority("ADMIN","COMMITTEE");
+                    authorize.requestMatchers(HttpMethod.DELETE,"/api/v1/articles/deleteArticleById").hasAnyAuthority("ADMIN","COMMITTEE");
+                    authorize.requestMatchers(HttpMethod.POST,"/api/v1/articles/newArticle").hasAnyAuthority("ADMIN","COMMITTEE");
                   authorize.anyRequest().authenticated();
                 })
                 .addFilterBefore(JWTAuthenticatIONFilter(), UsernamePasswordAuthenticationFilter.class)
