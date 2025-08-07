@@ -1,29 +1,63 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import ArticleCard from "../components/ArticleCard";
 import NewsletterSignup from "../components/NewsletterSignup";
-import { mockArticles, mockCommitteeMembers } from "../data/mockData";
+import { mockArticles } from "../data/mockData";
+import { fetchCommitteeMembers } from "../data/committeeApi";
+import type { TeamMember } from "../components/TeamMemberCard";
 
 export default function HomePage() {
+  const navigate = useNavigate();
+  const [committeeMembers, setCommitteeMembers] = useState<TeamMember[]>([]);
   const [currentMemberIndex, setCurrentMemberIndex] = useState(0);
-  const sortedMembers = [...mockCommitteeMembers].sort(
-    (a, b) => a.hierarchyOrder - b.hierarchyOrder
-  );
+  const [loadingMembers, setLoadingMembers] = useState(true);
 
+  // Fetch members from backend
   useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        const data = await fetchCommitteeMembers();
+        const sorted = [...data].sort(
+          (a, b) => a.hierarchyOrder - b.hierarchyOrder
+        );
+        setCommitteeMembers(sorted);
+        setLoadingMembers(false);
+      } catch (error) {
+        console.error("Error fetching committee members:", error);
+        setLoadingMembers(false);
+      }
+    };
+
+    loadMembers();
+  }, []);
+
+  // Auto-advance leadership carousel
+  useEffect(() => {
+    if (committeeMembers.length === 0) return;
     const interval = setInterval(() => {
       setCurrentMemberIndex(
-        (prevIndex) => (prevIndex + 1) % sortedMembers.length
+        (prevIndex) => (prevIndex + 1) % committeeMembers.length
       );
     }, 3000);
     return () => clearInterval(interval);
-  }, [sortedMembers.length]);
+  }, [committeeMembers]);
 
-  const currentMember = sortedMembers[currentMemberIndex];
+  const currentMember = committeeMembers[currentMemberIndex];
+
+  const handleAuthorClick = (authorName: string) => {
+    const matchedMember = committeeMembers.find(
+      (member) => member.name.toLowerCase() === authorName.toLowerCase()
+    );
+    if (matchedMember) {
+      navigate(`/about/${matchedMember.id}`);
+    } else {
+      alert("Author profile not found.");
+    }
+  };
 
   return (
     <div className="py-12">
-      {/* Hero Section 1 */}
+      {/* Hero Section */}
       <section className="flex flex-col lg:flex-row items-center justify-between text-center lg:text-center py-20 bg-white rounded-xl shadow-xl mb-16 px-8">
         <div className="lg:w-1/2">
           <h1 className="text-5xl md:text-6xl font-extrabold text-blue-800 leading-tight mb-4 animate-fade-in-up">
@@ -49,32 +83,37 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Members Carousel */}
+      {/* Committee Member Carousel */}
       <section className="mb-16 text-center">
         <h2 className="text-3xl font-bold text-gray-800 mb-8">
           Meet Our Leadership
         </h2>
-        <Link
-          to="/about"
-          className="relative overflow-hidden w-full max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8 cursor-pointer"
-        >
-          <div className="p-4 w-full flex-shrink-0 text-center carousel-fade">
-            <img
-              src={currentMember.imageUrl}
-              alt={currentMember.name}
-              className="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-lg"
-            />
-            <h3 className="text-xl font-bold text-gray-800">
-              {currentMember.name}
-            </h3>
-            <p className="text-blue-600 font-semibold">
-              {currentMember.position}
-            </p>
-            <p className="mt-2 text-gray-600 text-sm italic">
-              {currentMember.description}
-            </p>
-          </div>
-        </Link>
+
+        {loadingMembers || !currentMember ? (
+          <p className="text-gray-500">Loading leadership...</p>
+        ) : (
+          <Link
+            to={`/about/${currentMember.id}`}
+            className="relative overflow-hidden w-full max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8 cursor-pointer"
+          >
+            <div className="p-4 w-full text-center carousel-fade">
+              <img
+                src={currentMember.imageUrl}
+                alt={currentMember.name}
+                className="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-lg"
+              />
+              <h3 className="text-xl font-bold text-gray-800">
+                {currentMember.name}
+              </h3>
+              <p className="text-blue-600 font-semibold">
+                {currentMember.position}
+              </p>
+              <p className="mt-2 text-gray-600 text-sm italic">
+                {currentMember.description}
+              </p>
+            </div>
+          </Link>
+        )}
       </section>
 
       {/* Hero Section 2 */}
@@ -100,16 +139,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Article Previews Section */}
-      <section className="mb-16 text-center">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8">
+      {/* Article Section */}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
           Latest Articles
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {mockArticles.slice(0, 3).map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
+
+        {mockArticles.length === 0 ? (
+          <p className="text-xl text-gray-600 py-10 text-center">
+            No articles available.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {mockArticles.slice(0, 3).map((article) => (
+              <ArticleCard
+                key={article.id}
+                article={article}
+                onAuthorClick={handleAuthorClick}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <NewsletterSignup />

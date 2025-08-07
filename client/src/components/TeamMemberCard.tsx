@@ -1,4 +1,4 @@
-interface TeamMember {
+export interface TeamMember {
   id: string;
   name: string;
   position: string;
@@ -9,11 +9,22 @@ interface TeamMember {
 
 interface TeamMemberCardProps {
   member: TeamMember;
+  onClick?: (member: TeamMember) => void; // optional for flexibility
+  showDescription?: boolean; // optional to show truncated description
 }
 
-export default function TeamMemberCard({ member }: TeamMemberCardProps) {
+export default function TeamMemberCard({
+  member,
+  onClick,
+  showDescription = false,
+}: TeamMemberCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden text-center transform hover:scale-105 hover:shadow-xl transition-all duration-300 p-6">
+    <div
+      onClick={onClick ? () => onClick(member) : undefined}
+      className={`${
+        onClick ? "cursor-pointer hover:scale-105 hover:shadow-xl" : ""
+      } bg-white rounded-lg shadow-md overflow-hidden text-center transform transition-all duration-300 p-6`}
+    >
       <img
         src={member.imageUrl}
         alt={member.name}
@@ -22,6 +33,12 @@ export default function TeamMemberCard({ member }: TeamMemberCardProps) {
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-800">{member.name}</h3>
         <p className="text-sm text-blue-600">{member.position}</p>
+
+        {showDescription && (
+          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+            {member.description}
+          </p>
+        )}
       </div>
     </div>
   );

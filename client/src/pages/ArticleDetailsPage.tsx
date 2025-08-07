@@ -1,9 +1,23 @@
-import { Link, useParams } from "react-router-dom";
-import { mockArticles } from "../data/mockData";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { mockArticles, mockCommitteeMembers } from "../data/mockData";
 
 export default function ArticleDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const article = mockArticles.find((a) => a.id === id);
+
+  const handleAuthorClick = () => {
+    const matchedMember = mockCommitteeMembers.find(
+      (member) => member.name.toLowerCase() === article?.author.toLowerCase()
+    );
+
+    if (matchedMember) {
+      navigate(`/about/${matchedMember.id}`);
+    } else {
+      alert("Author profile not found.");
+    }
+  };
 
   if (!article) {
     return (
@@ -43,18 +57,28 @@ export default function ArticleDetailsPage() {
         </svg>
         Back to All Articles
       </Link>
+
       <img
         src={article.imageUrl}
         alt={article.title}
         className="w-full h-auto max-h-96 object-cover rounded-lg shadow-md mb-8"
       />
+
       <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
         {article.title}
       </h1>
+
       <p className="text-xl text-gray-600 mb-8">
-        By <span className="font-semibold text-blue-700">{article.author}</span>{" "}
+        By{" "}
+        <button
+          onClick={handleAuthorClick}
+          className="font-semibold text-blue-700 hover:underline focus:outline-none"
+        >
+          {article.author}
+        </button>{" "}
         on {article.date}
       </p>
+
       <div
         className="prose prose-lg max-w-none text-gray-800 leading-relaxed mb-10"
         dangerouslySetInnerHTML={{ __html: article.fullContent }}
