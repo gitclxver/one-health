@@ -2,6 +2,9 @@
 services:
   postgres:
     image: 'postgres:latest'
+    container_name: postgres
+    env_file:
+      - .prod.env  # Load environment variables from .prod.env file
     environment:
       - 'POSTGRES_DB=${POSTGRES_DB}'  # Use environment variable
       - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'  # Use environment variable
@@ -13,6 +16,11 @@ services:
 
   spring-blog-app:
     build: .  # Builds from Dockerfile in current directory
+    depends_on:
+      - 'postgres'
+    container_name: spring-blog-app
+    env_file:
+      - '.prod.env'  # Load environment variables from .prod.env file
     environment:
       # Spring Mail Configuration (Google SMTP)
       SPRING_MAIL_HOST: smtp.gmail.com
@@ -25,6 +33,9 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
 
       # cors config
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/BlogAPI
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_MVC_CORS_ALLOWED-ORIGINS: '*'
       SPRING_MVC_CORS_ALLOWED-METHODS: GET,POST,PUT,DELETE,OPTIONS
       SPRING_MVC_CORS_ALLOWED-HEADERS: '*'
