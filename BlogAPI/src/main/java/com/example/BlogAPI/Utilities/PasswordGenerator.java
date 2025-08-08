@@ -11,4 +11,5 @@ public class PasswordGenerator {
         System.out.println("Raw Password: " + rawPassword);
         System.out.println("BCrypt Hash:  " + encodedPassword);
     }
+    
 }

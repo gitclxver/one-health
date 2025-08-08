@@ -34,6 +34,9 @@ public class Admin {
     @NotBlank(message = "Password is required")
     private String password; // Store hashed password only
 
+    @Column(nullable = false)
+    private String role = "ADMIN";
+    
     @CreationTimestamp
     private LocalDateTime createdAt;
 

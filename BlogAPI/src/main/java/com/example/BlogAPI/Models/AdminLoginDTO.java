@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 
 public class AdminLoginDTO {
     
-    @NotBlank
-    private String usernameOrEmail;  // Changed from 'username' to be more generic
+    @NotBlank(message = "Username or email cannot be blank")
+    private String usernameOrEmail;
     
-    @NotBlank
+    @NotBlank(message = "Password cannot be blank")
     private String password;
 
     // Constructors
@@ -18,18 +18,17 @@ public class AdminLoginDTO {
         this.password = password;
     }
 
-    // Getters
+    // Getters and Setters
     public String getUsernameOrEmail() {
         return usernameOrEmail;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    // Setters (optional but recommended)
     public void setUsernameOrEmail(String usernameOrEmail) {
         this.usernameOrEmail = usernameOrEmail;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public void setPassword(String password) {
