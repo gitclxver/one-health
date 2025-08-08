@@ -1,26 +1,29 @@
 package com.example.BlogAPI.Services.articleServices;
 
-import com.example.BlogAPI.Exceptions.noArticleFoundException;
-import com.example.BlogAPI.Repositories.Command;
-import com.example.BlogAPI.Repositories.articleRepository;
+import com.example.BlogAPI.Models.Article;
+import com.example.BlogAPI.Repositories.ArticleRepository;
+import com.example.BlogAPI.Services.articleServices.interfaces.DeleteArticleByIdService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-@Service
-public class deleteArticleById implements Command<Long,String> {
-    private final articleRepository articleRepo;
+import java.util.Optional;
 
-    public deleteArticleById(articleRepository articleRepo) {
-        this.articleRepo = articleRepo;
+@Service
+public class DeleteArticleById implements DeleteArticleByIdService {
+    private final ArticleRepository articleRepository;
+
+    public DeleteArticleById(ArticleRepository articleRepository) {
+        this.articleRepository = articleRepository;
     }
 
     @Override
-    public ResponseEntity<String> execute(Long input) {
-        try {
-            articleRepo.deleteById(input);
-        }catch (RuntimeException e){
-            throw new noArticleFoundException();
+    public ResponseEntity<String> execute(Long id) {
+        Optional<Article> article = articleRepository.findById(id);
+        if (article.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok().body("Successfully deleted");
+        
+        articleRepository.deleteById(id);
+        return ResponseEntity.ok("Article deleted successfully");
     }
 }

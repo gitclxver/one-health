@@ -1,23 +1,23 @@
 package com.example.BlogAPI.Services.articleServices;
 
-import com.example.BlogAPI.Models.article;
-import com.example.BlogAPI.Repositories.Command;
-import com.example.BlogAPI.Repositories.articleRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-@Service
-public class AddnewArticle implements Command<article, article> {
-    private final articleRepository articleRepo;
+import com.example.BlogAPI.Models.Article;
+import com.example.BlogAPI.Repositories.ArticleRepository;
+import com.example.BlogAPI.Services.articleServices.interfaces.AddNewArticleService;
 
-    public AddnewArticle(articleRepository articleRepo) {
-        this.articleRepo = articleRepo;
+@Service
+public class AddNewArticle implements AddNewArticleService {
+    private final ArticleRepository articleRepository;
+
+    public AddNewArticle(ArticleRepository articleRepository) {
+        this.articleRepository = articleRepository;
     }
-    @Transactional
+
     @Override
-    public ResponseEntity<article> execute(article input) {
-        article newarticle = articleRepo.save(input);
-        return ResponseEntity.ok().body(newarticle);
+    public ResponseEntity<Article> execute(Article newArticle) {
+        Article savedArticle = articleRepository.save(newArticle);
+        return ResponseEntity.ok(savedArticle);
     }
 }

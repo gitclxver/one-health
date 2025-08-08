@@ -1,15 +1,52 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { mockArticles, mockCommitteeMembers } from "../data/mockData";
+import { getArticle } from "../services/public/articleService";
+import { fetchCommitteeMembers } from "../services/public/memberService";
+import type { Article } from "../models/Article";
+import type { Member } from "../models/Member";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function ArticleDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [article, setArticle] = useState<Article | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const article = mockArticles.find((a) => a.id === id);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (!id) {
+          throw new Error("Article ID is missing");
+        }
+
+        const [articleData, membersData] = await Promise.all([
+          getArticle(id),
+          fetchCommitteeMembers(),
+        ]);
+
+        setArticle(articleData);
+        setMembers(membersData);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load article. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
 
   const handleAuthorClick = () => {
-    const matchedMember = mockCommitteeMembers.find(
-      (member) => member.name.toLowerCase() === article?.author.toLowerCase()
+    if (!article) return;
+
+    const matchedMember = members.find(
+      (member) => member.name.toLowerCase() === article.author.toLowerCase()
     );
 
     if (matchedMember) {
@@ -18,6 +55,29 @@ export default function ArticleDetailsPage() {
       alert("Author profile not found.");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">Error</h1>
+        <p className="text-xl text-gray-600 mb-6">{error}</p>
+        <Link
+          to="/articles"
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors text-lg font-semibold"
+        >
+          Back to All Articles
+        </Link>
+      </div>
+    );
+  }
 
   if (!article) {
     return (
@@ -36,7 +96,7 @@ export default function ArticleDetailsPage() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-xl p-8 lg:p-12 my-12">
+    <div className="bg-white rounded-lg shadow-xl p-8 lg:p-12 my-12 max-w-5xl mx-auto">
       <Link
         to="/articles"
         className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8 transition-colors text-lg font-semibold"
@@ -58,31 +118,55 @@ export default function ArticleDetailsPage() {
         Back to All Articles
       </Link>
 
-      <img
-        src={article.imageUrl}
-        alt={article.title}
-        className="w-full h-auto max-h-96 object-cover rounded-lg shadow-md mb-8"
-      />
+      {article.featuredImage && (
+        <img
+          src={article.featuredImage}
+          alt={article.title}
+          className="w-full h-auto max-h-96 object-cover rounded-lg shadow-md mb-8"
+        />
+      )}
 
-      <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
-        {article.title}
-      </h1>
-
-      <p className="text-xl text-gray-600 mb-8">
-        By{" "}
-        <button
-          onClick={handleAuthorClick}
-          className="font-semibold text-blue-700 hover:underline focus:outline-none"
-        >
-          {article.author}
-        </button>{" "}
-        on {article.date}
-      </p>
+      <div className="mb-8">
+        {article.isFeatured && (
+          <span className="inline-block bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full mb-4">
+            Featured Article
+          </span>
+        )}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
+          {article.title}
+        </h1>
+        <p className="text-xl text-gray-600">
+          By{" "}
+          <button
+            onClick={handleAuthorClick}
+            className="font-semibold text-blue-700 hover:underline focus:outline-none"
+          >
+            {article.author}
+          </button>{" "}
+          on{" "}
+          {new Date(
+            article.publishedAt || article.createdAt
+          ).toLocaleDateString()}
+        </p>
+      </div>
 
       <div
         className="prose prose-lg max-w-none text-gray-800 leading-relaxed mb-10"
-        dangerouslySetInnerHTML={{ __html: article.fullContent }}
+        dangerouslySetInnerHTML={{ __html: article.content }}
       />
+
+      {article.tags && article.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-8">
+          {article.tags.map((tag) => (
+            <span
+              key={tag}
+              className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import type { TeamMember } from "../../../components/TeamMemberCard";
+import type { Member } from "../../../models/Member";
 
 interface Props {
-  onSave: (member: TeamMember) => void;
-  editingMember?: TeamMember | null;
+  onSave: (member: Member) => void;
+  editingMember?: Member | null;
   onCancelEdit: () => void;
 }
 
@@ -12,13 +12,14 @@ export default function CommitteeForm({
   editingMember,
   onCancelEdit,
 }: Props) {
-  const [member, setMember] = useState<TeamMember>({
-    id: "",
+  const [member, setMember] = useState<Member>({
+    id: 0,
     name: "",
     position: "",
-    description: "",
+    bio: "",
     imageUrl: "",
-    hierarchyOrder: 0,
+    isActive: true,
+    joinDate: new Date().toISOString(),
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,18 +51,21 @@ export default function CommitteeForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!member.name || !member.position) return;
+
     onSave({
       ...member,
-      id: member.id || crypto.randomUUID(),
-      hierarchyOrder: Number(member.hierarchyOrder),
+      id: member.id || Date.now(),
+      joinDate: member.joinDate || new Date().toISOString(),
     });
+
     setMember({
-      id: "",
+      id: 0,
       name: "",
       position: "",
-      description: "",
+      bio: "",
       imageUrl: "",
-      hierarchyOrder: 0,
+      isActive: true,
+      joinDate: new Date().toISOString(),
     });
   };
 
@@ -122,18 +126,9 @@ export default function CommitteeForm({
         <textarea
           name="description"
           placeholder="Description"
-          value={member.description}
+          value={member.bio}
           onChange={handleChange}
           className="w-full max-w-xs border p-2 rounded h-32 resize-none mx-auto block"
-        />
-
-        <input
-          type="number"
-          name="hierarchyOrder"
-          placeholder="Hierarchy Order"
-          value={member.hierarchyOrder}
-          onChange={handleChange}
-          className="w-full max-w-xs border p-2 rounded mx-auto block"
         />
       </div>
 

@@ -1,11 +1,11 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import type { TeamMember } from "./TeamMemberCard";
+import type { Member } from "../models/Member";
 
 interface TeamMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  member: TeamMember | null;
+  member: Member | null;
 }
 
 export default function TeamMemberModal({
@@ -65,7 +65,7 @@ export default function TeamMemberModal({
                       {member.position}
                     </p>
                     <p className="text-gray-600 text-sm whitespace-pre-line">
-                      {member.description}
+                      {member.bio}
                     </p>
 
                     <button

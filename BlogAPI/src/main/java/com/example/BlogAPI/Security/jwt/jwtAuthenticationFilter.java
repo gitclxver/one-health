@@ -1,49 +1,56 @@
 package com.example.BlogAPI.Security.jwt;
 
-import io.jsonwebtoken.Claims;
+import java.io.IOException;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-public class jwtAuthenticationFilter extends OncePerRequestFilter {
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
-        String token = null;
-
-        //header: Authorization Bearer [jwt]
-        if(authHeader!=null && authHeader.startsWith("Bearer ")){
-            token = authHeader.substring(7);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
+                                FilterChain chain) throws ServletException, IOException {
+        try {
+            String token = resolveToken(request);
+            
+            if (token != null) {
+                if (!jwtUtil.isTokenValid(token)) {
+                    logger.warn("Invalid JWT token");
+                } else {
+                    String username = jwtUtil.getUsernameFromToken(token);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                    
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Cannot set user authentication", e);
         }
-        if(token != null && jwtUtil.isTokenValid(token)) {
-            Claims claims = jwtUtil.getClaims(token);
+        
+        chain.doFilter(request, response);
+    }
 
-            // Get role from claims
-            String role = claims.get("role", String.class);
-            List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority(role)
-            );
-
-
-            Authentication Auth = new UsernamePasswordAuthenticationToken(
-                    claims.getSubject(),
-                    null,
-                    authorities  // Add authorities here
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(Auth);
-        }
-        filterChain.doFilter(request,response);
+    private String resolveToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        return (header != null && header.startsWith("Bearer ")) ? header.substring(7) : null;
     }
 }

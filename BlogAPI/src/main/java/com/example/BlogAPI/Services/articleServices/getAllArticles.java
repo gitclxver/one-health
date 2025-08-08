@@ -1,26 +1,24 @@
 package com.example.BlogAPI.Services.articleServices;
 
-import com.example.BlogAPI.Exceptions.noArticleFoundException;
-import com.example.BlogAPI.Models.article;
-import com.example.BlogAPI.Repositories.articleRepository;
+import com.example.BlogAPI.Models.Article;
+import com.example.BlogAPI.Repositories.ArticleRepository;
+import com.example.BlogAPI.Services.articleServices.interfaces.GetAllArticlesService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class getAllArticles {
-    private final articleRepository articleRepo;
+public class GetAllArticles implements GetAllArticlesService {
+    private final ArticleRepository articleRepository;
 
-    public getAllArticles(articleRepository articleRepo) {
-        this.articleRepo = articleRepo;
+    public GetAllArticles(ArticleRepository articleRepository) {
+        this.articleRepository = articleRepository;
     }
 
-    public ResponseEntity<List<article>> getAllarticles(){
-        List<article> allArticles = articleRepo.findAll();
-        if(!(allArticles.isEmpty())){
-            return ResponseEntity.ok().body(allArticles);
-        }
-        throw new noArticleFoundException();
+    @Override
+    public ResponseEntity<List<Article>> execute() {
+        List<Article> articles = articleRepository.findAll();
+        return ResponseEntity.ok(articles);
     }
 }
