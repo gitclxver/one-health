@@ -1,1 +1,0 @@
-CREATE TABLE dummy_table(id INT);
