@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import ArticleCard from "../components/ArticleCard";
 import TeamMemberCard from "../components/TeamMemberCard";
-import NewsletterSignup from "../components/NewsletterSignup";
+import NewsletterSignup from "../components/NewsletterSignUp";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useArticlesStore } from "../store/useArticlesStore";
 import { useMembersStore } from "../store/useMembersStore";
