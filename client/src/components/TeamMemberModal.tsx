@@ -1,22 +1,31 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import type { Member } from "../models/Member";
+import { useMembersStore } from "../store/useMembersStore";
+import defaultAvatar from "../assets/default-avatar.png";
 
-interface TeamMemberModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  member: Member | null;
-}
+export default function TeamMemberModal() {
+  const { selectedMember: member, isModalOpen, closeModal } = useMembersStore();
 
-export default function TeamMemberModal({
-  isOpen,
-  onClose,
-  member,
-}: TeamMemberModalProps) {
+  if (!member) return null;
+
+  const getImageUrl = () => {
+    if (!member.imageUrl) return defaultAvatar;
+    if (member.imageUrl.startsWith("blob:")) return member.imageUrl;
+    if (
+      member.imageUrl.startsWith("http://") ||
+      member.imageUrl.startsWith("https://")
+    )
+      return member.imageUrl;
+    if (member.imageUrl.startsWith("/"))
+      return `${import.meta.env.VITE_API_BASE_URL}${member.imageUrl}`;
+    return `${import.meta.env.VITE_API_BASE_URL}/${member.imageUrl}`;
+  };
+
+  const resolvedImageUrl = getImageUrl();
+
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        {/* Overlay with blur and transparency */}
+    <Transition appear show={isModalOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={closeModal}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -29,56 +38,72 @@ export default function TeamMemberModal({
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-all" />
         </Transition.Child>
 
-        {/* Centered modal */}
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95 translate-y-4"
-              enterTo="opacity-100 scale-100 translate-y-0"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100 translate-y-0"
-              leaveTo="opacity-0 scale-95 translate-y-4"
+        <div className="fixed inset-0 overflow-y-auto flex items-center justify-center p-4 text-center">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95 translate-y-4"
+            enterTo="opacity-100 scale-100 translate-y-0"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100 translate-y-0"
+            leaveTo="opacity-0 scale-95 translate-y-4"
+          >
+            <Dialog.Panel
+              className="
+                w-full max-w-3xl
+                bg-white/70 backdrop-blur-md border border-[#6A8B57]/30 rounded-2xl
+                shadow-lg
+                flex flex-col md:flex-row
+                overflow-hidden
+                relative
+              "
+              style={{ minHeight: "24rem" }}
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-8 text-center align-middle shadow-2xl transition-all relative">
-                {member && (
-                  <>
-                    {/* Close button (top right) */}
-                    <button
-                      onClick={onClose}
-                      className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
-                      aria-label="Close"
-                    >
-                      &times;
-                    </button>
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 text-[#6A8B57]/70 hover:text-[#6A8B57] transition text-2xl font-bold z-10"
+                aria-label="Close"
+              >
+                &times;
+              </button>
 
-                    <img
-                      src={member.imageUrl}
-                      alt={member.name}
-                      className="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-md"
-                    />
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      {member.name}
-                    </h3>
-                    <p className="text-blue-600 font-medium mb-4">
-                      {member.position}
-                    </p>
-                    <p className="text-gray-600 text-sm whitespace-pre-line">
-                      {member.bio}
-                    </p>
+              {/* Left side: Image */}
+              <div className="flex-shrink-0 md:w-1/2 h-64 md:h-auto overflow-hidden">
+                <img
+                  src={resolvedImageUrl}
+                  alt={member.name}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                />
+              </div>
 
-                    <button
-                      onClick={onClose}
-                      className="mt-6 px-6 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
-                    >
-                      Close
-                    </button>
-                  </>
-                )}
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
+              {/* Right side: Content */}
+              <div className="md:w-1/2 flex flex-col justify-center items-center text-center p-6">
+                <Dialog.Title
+                  as="h3"
+                  className="text-3xl font-semibold text-[#14180f] mb-2"
+                >
+                  {member.name}
+                </Dialog.Title>
+                <p className="text-[#29331e] font-medium text-lg mb-4">
+                  {member.position}
+                </p>
+                <div className="text-[#38491f] text-base leading-relaxed max-h-60 overflow-y-auto w-full px-1">
+                  {member.bio.split("\n").map((paragraph, i) => (
+                    <p key={i} className="mb-4">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+
+                <button
+                  onClick={closeModal}
+                  className="mt-6 px-6 py-2 border border-[#6A8B57] text-[#6A8B57] rounded hover:bg-[#6A8B57] hover:text-white transition"
+                >
+                  Close
+                </button>
+              </div>
+            </Dialog.Panel>
+          </Transition.Child>
         </div>
       </Dialog>
     </Transition>

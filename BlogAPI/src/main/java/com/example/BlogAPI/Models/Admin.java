@@ -42,6 +42,7 @@ public class Admin {
     @Column(nullable = false)
     private String password;
     
+    @Builder.Default
     @Column(nullable = false)
     private boolean isActive = true;
     
@@ -56,6 +57,7 @@ public class Admin {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
     
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.ADMIN;

@@ -1,174 +1,162 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import ArticleCard from "../components/ArticleCard";
-import NewsletterSignup from "../components/NewsletterSignup";
-import { getPublishedArticles, getFeaturedArticles } from "../services/public/articleService";
-import { fetchCommitteeMembers } from "../services/public/memberService";
 import LoadingSpinner from "../components/LoadingSpinner";
-import type { Article } from "../models/Article";
-import type { Member } from "../models/Member";
+import { useArticlesStore } from "../store/useArticlesStore";
+import { FiSearch, FiArrowLeft } from "react-icons/fi";
 
 export default function ArticlesPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showFeatured, setShowFeatured] = useState(false);
-  const navigate = useNavigate();
+  const { articles, loading, error, fetchAdminArticles } = useArticlesStore();
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const [publishedArticles, committeeMembers] = await Promise.all([
-          showFeatured ? getFeaturedArticles() : getPublishedArticles(),
-          fetchCommitteeMembers()
-        ]);
-
-        setArticles(publishedArticles);
-        setMembers(committeeMembers);
-      } catch (err) {
-        console.error("Error fetching articles:", err);
-        setError("Failed to load articles. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticles();
-  }, [showFeatured]);
-
-  const handleAuthorClick = (authorName: string) => {
-    const matchedMember = members.find(
-      (member) => member.name.toLowerCase() === authorName.toLowerCase()
-    );
-
-    if (matchedMember) {
-      navigate(`/about/${matchedMember.id}`);
-    } else {
-      alert("Author profile not found.");
-    }
-  };
+    fetchAdminArticles();
+  }, [fetchAdminArticles]);
 
   const filteredArticles = articles.filter(
     (article) =>
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (article.tags && article.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      )
+      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (error) {
-    return (
-      <div className="text-center py-20">
-        <h1 className="text-4xl font-bold text-gray-800 mb-4">Error</h1>
-        <p className="text-xl text-gray-600 mb-6">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Hero / Search */}
-      <section className="text-center mb-12">
-        <h1 className="text-4xl font-extrabold text-blue-700 mb-4">
-          {showFeatured ? "Featured Articles" : "Our Latest Articles"}
-        </h1>
-        <p className="text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">
-          Dive deep into research, community initiatives, and expert insights.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
-          <div className="relative w-full max-w-lg">
-            <input
-              type="text"
-              placeholder="Search articles..."
-              className="px-4 py-3 border border-gray-300 rounded-full w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <svg
-              className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                clipRule="evenodd"
+    <>
+      {/* Background gradient */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: "linear-gradient(135deg, #A7CFE1 0%, #6A8B57 100%)",
+        }}
+      />
+
+      {/* Main container */}
+      <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Page header */}
+        <section
+          className="text-center mb-12 sm:mb-16 py-12 sm:py-16 px-4 sm:px-6 lg:px-12 rounded-3xl shadow-lg"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#6A8B57] mb-3 sm:mb-4">
+            Our Articles
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            Explore our latest insights on One Health, research findings, and
+            community initiatives
+          </p>
+        </section>
+
+        {/* Articles section */}
+        <section
+          className="rounded-3xl p-6 sm:p-8 shadow-lg mb-8"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          {/* Search bar */}
+          <div className="mb-8 max-w-2xl mx-auto">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiSearch className="h-5 w-5 text-gray-500" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search Articles"
+                className="block w-full pl-10 pr-3 py-3 sm:py-4 border border-[#6A8B57] rounded-full bg-white bg-opacity-70 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6A8B57] focus:border-transparent text-sm sm:text-base"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </svg>
+            </div>
           </div>
-          
-          <button
-            onClick={() => setShowFeatured(!showFeatured)}
-            className={`px-6 py-3 rounded-full transition-colors ${
-              showFeatured
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+
+          {loading ? (
+            <div className="flex justify-center py-12 sm:py-16">
+              <LoadingSpinner />
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 sm:py-16">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
+                Something went wrong
+              </h3>
+              <p className="text-base sm:text-lg text-red-600 mb-4 sm:mb-6">
+                {error}
+              </p>
+              <button
+                onClick={fetchAdminArticles}
+                className="px-5 sm:px-6 py-2 sm:py-3 bg-[#6A8B57] text-white rounded-lg hover:bg-[#567544] transition-colors font-medium text-sm sm:text-base"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : filteredArticles.length === 0 ? (
+            <div className="text-center py-12 sm:py-16">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
+                {searchTerm
+                  ? "No matching articles found"
+                  : "No Articles Available"}
+              </h3>
+              <p className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6">
+                {searchTerm
+                  ? "Try a different search term"
+                  : "We haven't published any articles yet. Check back soon!"}
+              </p>
+              {searchTerm ? (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="px-5 sm:px-6 py-2 sm:py-3 bg-[#6A8B57] text-white rounded-lg hover:bg-[#567544] transition-colors font-medium text-sm sm:text-base"
+                >
+                  Clear Search
+                </button>
+              ) : (
+                <Link
+                  to="/"
+                  className="inline-flex items-center text-[#6A8B57] hover:text-[#567544] transition-colors font-semibold text-sm sm:text-base"
+                >
+                  <FiArrowLeft className="mr-2 w-5 h-5" />
+                  Back to Home
+                </Link>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+                  {searchTerm ? "Search Results" : "All Articles"}
+                </h2>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  {filteredArticles.length} article
+                  {filteredArticles.length !== 1 ? "s" : ""} found
+                  {searchTerm && ` for "${searchTerm}"`}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                {filteredArticles.map((article) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
+        {/* Call to action */}
+        <section className="text-center">
+          <Link
+            to="/"
+            className="inline-flex items-center text-[#6A8B57] hover:text-[#567544] transition-colors font-semibold text-sm sm:text-base"
           >
-            {showFeatured ? "Show All Articles" : "Show Featured"}
-          </button>
-        </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="mb-12">
-        <NewsletterSignup />
-      </section>
-
-      {/* Articles */}
-      <section>
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-          {searchQuery ? `Search Results for "${searchQuery}"` : 
-           showFeatured ? "Featured Articles" : "All Articles"}
-        </h2>
-
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner />
-          </div>
-        ) : filteredArticles.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-xl text-gray-600 mb-4">
-              No articles found matching your search.
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setShowFeatured(false);
-              }}
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Clear search and filters
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredArticles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                onAuthorClick={handleAuthorClick}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
+            <FiArrowLeft className="mr-2 w-5 h-5" />
+            Back to Home
+          </Link>
+        </section>
+      </div>
+    </>
   );
 }

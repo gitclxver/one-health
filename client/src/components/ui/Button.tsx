@@ -8,6 +8,7 @@ interface ButtonProps {
   variant?: "primary" | "secondary" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   className?: string;
+  disabled?: boolean;
 }
 
 export default function Button({
@@ -17,6 +18,7 @@ export default function Button({
   variant = "primary",
   size = "md",
   className = "",
+  
 }: ButtonProps) {
   const baseClasses = "rounded-full font-semibold transition-colors";
   const sizeClasses = {

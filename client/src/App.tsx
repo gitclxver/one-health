@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import PublicRoutes from "./routes/PublicRoutes";
 import AdminRoutes from "./routes/AdminRoutes";
+import AdminPublicRoute from "./routes/AdminPublicRoutes"; // <== new import
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ArticlesPage from "./pages/ArticlesPage";
@@ -8,6 +9,7 @@ import ArticleDetailsPage from "./pages/ArticleDetailsPage";
 import ManageArticles from "./pages/admin/ManageArticles";
 import ManageCommittee from "./pages/admin/ManageCommittee";
 import AdminLogin from "./pages/admin/Login";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 function App() {
   return (
@@ -22,16 +24,18 @@ function App() {
             <Route path="/articles/:id" element={<ArticleDetailsPage />} />
           </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminRoutes />}>
-            <Route path="articles" element={<ManageArticles />} />
-            <Route path="committee" element={<ManageCommittee />} />
-            <Route index element={<ManageArticles />} />{" "}
-            {/* Optional: default admin route */}
+          {/* Admin Login Route: only accessible if NOT authenticated */}
+          <Route path="/admin/login" element={<AdminPublicRoute />}>
+            <Route index element={<AdminLogin />} />
           </Route>
 
-          {/* Admin Login (public) */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={<AdminRoutes />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="articles" element={<ManageArticles />} />
+            <Route path="committee" element={<ManageCommittee />} />
+          </Route>
         </Routes>
       </div>
     </Router>

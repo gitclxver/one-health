@@ -19,7 +19,10 @@ export default function NewsletterSignup() {
 
     // Basic email validation
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setMessage({ text: "Please enter a valid email address", type: "error" });
+      setMessage({
+        text: "Please enter a valid email address.",
+        type: "error",
+      });
       return;
     }
 
@@ -29,104 +32,87 @@ export default function NewsletterSignup() {
     try {
       await subscribeToNewsletter(email);
       setMessage({
-        text: "Thank you for subscribing to our newsletter!",
+        text: "✅ Subscribed! Please check your inbox for future updates.",
         type: "success",
       });
-      setEmail(""); // Clear the form on success
+      setEmail("");
     } catch (error) {
       let errorMessage = "Subscription failed. Please try again later.";
-
-      // Type guard to check if it's an AxiosError
       if (isAxiosError(error)) {
         errorMessage = error.response?.data?.message || errorMessage;
-      }
-      // Regular Error type check
-      else if (error instanceof Error) {
+      } else if (error instanceof Error) {
         errorMessage = error.message;
       }
-
       console.error("Newsletter subscription error:", error);
-      setMessage({
-        text: errorMessage,
-        type: "error",
-      });
+      setMessage({ text: errorMessage, type: "error" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Type guard for AxiosError
   function isAxiosError(error: unknown): error is AxiosError<ApiError> {
     return (error as AxiosError).isAxiosError !== undefined;
   }
 
   return (
-    <section className="py-20 relative overflow-hidden px-4">
-      {/* Background Dot Pattern */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage:
-            "radial-gradient(rgba(59, 130, 246, 0.5) 1.5px, transparent 1.5px)",
-          backgroundSize: "16px 16px",
-        }}
-      />
-
-      {/* Glass Panel */}
-      <div className="relative z-10 max-w-6xl mx-auto bg-white/70 backdrop-blur-2xl border border-blue-200 p-10 md:p-14 rounded-3xl shadow-2xl">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-          {/* Text Block */}
-          <div className="md:w-2/3 text-center md:text-left">
-            <h3 className="text-4xl font-extrabold text-blue-800 mb-3">
-              Stay Updated
-            </h3>
-            <p className="text-gray-700 text-lg">
-              Join our newsletter to receive the latest articles and updates
-              directly in your inbox.
-            </p>
-          </div>
-
-          {/* Signup Form */}
-          <form onSubmit={handleSubmit} className="md:w-1/3 w-full">
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-                className="flex-grow px-5 py-3 border border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-800 placeholder:text-gray-500 w-full"
-                required
-                disabled={isSubmitting}
-                aria-label="Email address for newsletter subscription"
-              />
-              <button
-                type="submit"
-                className={`px-6 py-3 font-semibold rounded-lg shadow-md transition-colors whitespace-nowrap ${
-                  isSubmitting
-                    ? "bg-blue-400 cursor-not-allowed"
-                    : "bg-blue-700 hover:bg-blue-800 text-white"
-                }`}
-                disabled={isSubmitting}
-                aria-busy={isSubmitting}
-              >
-                {isSubmitting ? "Subscribing..." : "Subscribe"}
-              </button>
-            </div>
-
-            {/* Status message */}
-            {message && (
-              <div
-                className={`mt-3 text-sm ${
-                  message.type === "success" ? "text-green-600" : "text-red-600"
-                }`}
-                role="alert"
-              >
-                {message.text}
-              </div>
-            )}
-          </form>
-        </div>
+    <section
+      className="flex flex-col md:flex-row items-center justify-between py-10 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8 rounded-3xl shadow-lg w-full max-w-7xl mx-auto my-8 sm:my-12 md:my-16"
+      style={{
+        background: "rgba(255, 255, 255, 0.5)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        border: "1px solid rgba(255, 255, 255, 0.3)",
+      }}
+    >
+      <div className="w-full md:w-1/2 text-center md:text-left mb-6 sm:mb-8 md:mb-0 px-2 sm:px-4">
+        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-2 sm:mb-3 text-[#456033]">
+          Stay Ahead in One Health
+        </h3>
+        <p className="text-base sm:text-lg lg:text-xl text-gray-800 max-w-md sm:max-w-lg mx-auto md:mx-0">
+          Get research highlights, event invites, and key insights—delivered
+          straight to your inbox.
+        </p>
       </div>
+
+      <form onSubmit={handleSubmit} className="w-full md:w-1/2 px-2 sm:px-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            className="w-full flex-grow px-4 sm:px-5 py-2 sm:py-3 rounded-full border border-[#6A8B57] text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6A8B57] shadow-sm transition text-sm sm:text-base"
+            disabled={isSubmitting}
+            aria-label="Email address for newsletter subscription"
+            required
+          />
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+            className={`w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold shadow-md whitespace-nowrap transition-colors text-sm sm:text-base ${
+              isSubmitting
+                ? "bg-[#a0b589] cursor-not-allowed text-white"
+                : "bg-[#6A8B57] hover:bg-[#567544] text-white"
+            }`}
+          >
+            {isSubmitting ? "Subscribing..." : "Subscribe"}
+          </button>
+        </div>
+
+        {message && (
+          <div
+            role="alert"
+            className={`mt-2 sm:mt-3 text-xs sm:text-sm ${
+              message.type === "success"
+                ? "text-green-700 font-semibold"
+                : "text-red-600 font-medium"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+      </form>
     </section>
   );
 }

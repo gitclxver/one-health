@@ -1,149 +1,170 @@
 import { useEffect, useState } from "react";
-import {
-  getAdminArticles,
-  createArticle,
-  updateArticle,
-  deleteArticle as deleteArticleApi,
-  featureArticle,
-  publishArticle,
-} from "../../services/admin/adminArticleService";
-import ArticleForm from "./articles/ArticleForm";
-import ArticleCard from "../../components/ArticleCard";
-import type { Article } from "../../models/Article";
+import ArticleFormContainer from "./ArticleFormContainer";
+import ArticleCard from "../../components/ArticleCardAdmin";
 import AdminHeader from "../../components/admin/AdminHeader";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { toast } from "react-toastify";
+import { useArticlesStore } from "../../store/useArticlesStore";
+import type { Article } from "../../models/Article";
 
 export default function ManageArticles() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const {
+    articles,
+    loading,
+    saving,
+    error,
+    fetchAdminArticles,
+    saveArticle,
+    deleteArticle,
+  } = useArticlesStore();
+
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState({
-    articles: true,
-    saving: false,
-    deleting: false,
-  });
-  const [error, setError] = useState<string | null>(null);
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   useEffect(() => {
-    fetchArticles();
-  }, []);
+    fetchAdminArticles();
+  }, [fetchAdminArticles]);
 
-  const fetchArticles = async () => {
-    setLoading((prev) => ({ ...prev, articles: true }));
-    setError(null);
-    try {
-      const data = await getAdminArticles();
-      setArticles(data);
-    } catch (err) {
-      console.error("Failed to fetch articles:", err);
-      setError("Failed to load articles");
-      toast.error("Failed to load articles");
-    } finally {
-      setLoading((prev) => ({ ...prev, articles: false }));
-    }
+  const onSaveDone = () => {
+    setEditingArticle(null);
   };
 
   const handleSave = async (
     article: Omit<Article, "id" | "createdAt" | "updatedAt"> & { id?: string }
   ) => {
-    setLoading((prev) => ({ ...prev, saving: true }));
     try {
-      if (article.id) {
-        // Existing article - update
-        const updatedArticle = await updateArticle(article.id, article);
-        setArticles((prev) =>
-          prev.map((a) =>
-            a.id === article.id ? { ...a, ...updatedArticle } : a
-          )
-        );
-        toast.success("Article updated successfully");
-      } else {
-        // New article - create
-        const newArticle = await createArticle(article);
-        setArticles((prev) => [...prev, newArticle]);
-        toast.success("Article created successfully");
-      }
-      setEditingArticle(null);
-    } catch (err) {
-      console.error("Failed to save article:", err);
+      await saveArticle(article);
+      toast.success(
+        `Article ${article.id ? "updated" : "created"} successfully`
+      );
+      onSaveDone();
+    } catch {
       toast.error("Failed to save article");
-    } finally {
-      setLoading((prev) => ({ ...prev, saving: false }));
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this article?")) return;
 
-    setLoading((prev) => ({ ...prev, deleting: true }));
     try {
-      await deleteArticleApi(id);
-      setArticles((prev) => prev.filter((a) => a.id !== id));
+      await deleteArticle(id);
       toast.success("Article deleted successfully");
-    } catch (err) {
-      console.error("Failed to delete article:", err);
+      if (editingArticle?.id === id) {
+        setEditingArticle(null);
+        setResetTrigger((prev) => prev + 1);
+      }
+    } catch {
       toast.error("Failed to delete article");
-    } finally {
-      setLoading((prev) => ({ ...prev, deleting: false }));
     }
   };
 
-  const handleFeatureToggle = async (id: string) => {
-    try {
-      await featureArticle(id);
-      setArticles((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, isFeatured: !a.isFeatured } : a))
-      );
-      toast.success("Article feature status updated");
-    } catch (err) {
-      console.error("Failed to toggle feature status:", err);
-      toast.error("Failed to update feature status");
-    }
+  const handleEdit = (article: Article) => {
+    setEditingArticle(article);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handlePublishToggle = async (id: string) => {
-    try {
-      await publishArticle(id);
-      setArticles((prev) =>
-        prev.map((a) =>
-          a.id === id ? { ...a, isPublished: !a.isPublished } : a
-        )
-      );
-      toast.success("Article publish status updated");
-    } catch (err) {
-      console.error("Failed to toggle publish status:", err);
-      toast.error("Failed to update publish status");
-    }
+  const handleCreateNew = () => {
+    setEditingArticle(null);
+    setResetTrigger((prev) => prev + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <>
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: "linear-gradient(135deg, #A7CFE1 0%, #6A8B57 100%)",
+        }}
+      />
+
       <AdminHeader />
-      <div className="flex-grow p-6 max-w-7xl mx-auto w-full">
-        <h1 className="text-2xl font-bold mb-6">Manage Articles</h1>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <ArticleForm
-            article={editingArticle}
-            onSave={handleSave}
-            onCancel={() => setEditingArticle(null)}
-            isSubmitting={loading.saving}
-          />
-        </div>
+      <main className="min-h-screen max-w-5xl mx-auto px-6 py-10">
+        <section
+          className="mb-8 rounded-3xl p-6 text-center"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          <h1 className="text-4xl font-extrabold text-[#6A8B57]">
+            Manage Articles
+          </h1>
+          <p className="mt-2 text-green-900 font-medium">
+            Add, Edit, or Remove Articles Here.
+          </p>
+        </section>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Articles</h2>
-            <button
-              onClick={fetchArticles}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-              disabled={loading.articles}
-            >
-              {loading.articles ? "Refreshing..." : "Refresh Articles"}
-            </button>
+        <section
+          className="mb-12 rounded-3xl p-8"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-[#4f6d33]">
+              {editingArticle ? "Edit Article" : "Create New Article"}
+            </h2>
+            {editingArticle && (
+              <button
+                onClick={handleCreateNew}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+                disabled={saving}
+              >
+                Create New Article
+              </button>
+            )}
           </div>
 
-          {loading.articles ? (
+          <ArticleFormContainer
+            article={editingArticle || undefined}
+            onDone={onSaveDone}
+            saving={saving}
+            onCancel={() => setEditingArticle(null)}
+            onSave={handleSave}
+            resetTrigger={resetTrigger}
+          />
+
+          {saving && (
+            <p className="mt-2 text-gray-600">Saving article, please wait...</p>
+          )}
+        </section>
+
+        <section
+          className="rounded-3xl p-6"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-[#4f6d33]">
+              Articles ({articles.length})
+            </h2>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCreateNew}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+                disabled={loading}
+              >
+                New Article
+              </button>
+              <button
+                onClick={fetchAdminArticles}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "Refresh Articles"}
+              </button>
+            </div>
+          </div>
+
+          {loading ? (
             <div className="flex justify-center py-12">
               <LoadingSpinner />
             </div>
@@ -151,32 +172,43 @@ export default function ManageArticles() {
             <div className="text-center py-12 text-red-600">
               {error}
               <button
-                onClick={fetchArticles}
+                onClick={fetchAdminArticles}
                 className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
               >
                 Retry
               </button>
             </div>
           ) : articles.length === 0 ? (
-            <p className="text-gray-500">No articles added yet</p>
+            <div className="text-center py-12 text-gray-700">
+              <p className="mb-4">No articles found.</p>
+              <button
+                onClick={handleCreateNew}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+              >
+                Create Your First Article
+              </button>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              className="grid gap-6"
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              }}
+            >
               {articles.map((article) => (
-                <div key={article.id} className="relative group">
-                  <ArticleCard
-                    article={article}
-                    showActions
-                    onEdit={() => setEditingArticle(article)}
-                    onDelete={() => handleDelete(article.id)}
-                    onFeatureToggle={() => handleFeatureToggle(article.id)}
-                    onPublishToggle={() => handlePublishToggle(article.id)}
-                  />
-                </div>
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  onClick={() => handleEdit(article)}
+                  onEdit={() => handleEdit(article)}
+                  onDelete={() => handleDelete(article.id)}
+                  disabled={saving}
+                />
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </section>
+      </main>
+    </>
   );
 }

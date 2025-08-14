@@ -1,155 +1,147 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import type { Member } from "../../models/Member";
 import CommitteeForm from "./committee/CommitteeForm";
 import TeamMemberCard from "../../components/TeamMemberCard";
 import AdminHeader from "../../components/admin/AdminHeader";
-import LoadingSpinner from "../../components/LoadingSpinner";
-import { toast } from "react-toastify";
-import {
-  getAllCommitteeMembers,
-  createCommitteeMember,
-  updateCommitteeMember,
-  deleteCommitteeMember,
-} from "../../services/admin/adminMemberService";
+import { useMembersStore } from "../../store/useMembersStore"; // Adjust path
 
 export default function ManageCommittee() {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [editing, setEditing] = useState<Member | null>(null);
-  const [loading, setLoading] = useState({
-    members: true,
-    saving: false,
-    deleting: false,
-  });
-  const [error, setError] = useState<string | null>(null);
+  const {
+    committeeMembers,
+    editingMember,
+    saving,
+    fetchAndSetMembers,
+    setEditingMember,
+    saveMember,
+    deleteMember,
+  } = useMembersStore();
 
   useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const fetchMembers = async () => {
-    setLoading((prev) => ({ ...prev, members: true }));
-    setError(null);
-    try {
-      const data = await getAllCommitteeMembers();
-      setMembers(data);
-    } catch (err) {
-      console.error("Failed to fetch members:", err);
-      setError("Failed to load committee members");
-      toast.error("Failed to load committee members");
-    } finally {
-      setLoading((prev) => ({ ...prev, members: false }));
-    }
-  };
+    fetchAndSetMembers();
+  }, [fetchAndSetMembers]);
 
   const handleSave = async (
-    member: Omit<Member, "id" | "joinDate"> & { id?: number }
+    member: Omit<Member, "id" | "joinDate"> & { id?: number },
+    onSaved?: (id: number) => void
   ) => {
-    setLoading((prev) => ({ ...prev, saving: true }));
     try {
-      if (member.id) {
-        // Existing member - update
-        const updatedMember = await updateCommitteeMember(member.id, member);
-        setMembers((prev) =>
-          prev.map((m) => (m.id === member.id ? updatedMember : m))
-        );
-        toast.success("Member updated successfully");
-      } else {
-        // New member - create
-        const newMember = await createCommitteeMember(member);
-        setMembers((prev) => [...prev, newMember]);
-        toast.success("Member created successfully");
+      const saved = await saveMember(member);
+      if (onSaved && saved.id) {
+        onSaved(saved.id);
       }
-      setEditing(null);
-    } catch (err) {
-      console.error("Failed to save member:", err);
-      toast.error("Failed to save member");
-    } finally {
-      setLoading((prev) => ({ ...prev, saving: false }));
+      setEditingMember(null);
+      await fetchAndSetMembers();
+    } catch (error) {
+      console.error("Error saving member", error);
+      alert("Failed to save member. Please try again.");
     }
-  };
-
-  const handleEdit = (member: Member) => {
-    setEditing(member);
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
 
-    setLoading((prev) => ({ ...prev, deleting: true }));
     try {
-      await deleteCommitteeMember(id);
-      setMembers((prev) => prev.filter((m) => m.id !== id));
-      if (editing?.id === id) setEditing(null);
-      toast.success("Member deleted successfully");
-    } catch (err) {
-      console.error("Failed to delete member:", err);
-      toast.error("Failed to delete member");
-    } finally {
-      setLoading((prev) => ({ ...prev, deleting: false }));
+      await deleteMember(id);
+      await fetchAndSetMembers();
+    } catch (error) {
+      console.error("Error deleting member", error);
+      alert("Failed to delete member. Please try again.");
     }
   };
 
+  const handleEdit = (member: Member) => {
+    setEditingMember(member);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMember(null);
+  };
+
+  const sortedMembers = [...committeeMembers].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <>
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: "linear-gradient(135deg, #A7CFE1 0%, #6A8B57 100%)",
+        }}
+      />
+
       <AdminHeader />
-      <div className="flex-grow p-6">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Manage Committee Members</h1>
 
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <CommitteeForm
-              onSave={handleSave}
-              editingMember={editing}
-              onCancelEdit={() => setEditing(null)}
-            />
-          </div>
+      <main className="min-h-screen max-w-5xl mx-auto px-6 py-10">
+        <section
+          className="mb-8 rounded-3xl p-6 text-center"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          <h1 className="text-4xl font-extrabold" style={{ color: "#6A8B57" }}>
+            Manage Committee Members
+          </h1>
+          <p className="mt-2 text-green-900 font-medium">
+            Add, Edit, or Remove Committee Members Here.
+          </p>
+        </section>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Committee Members</h2>
-              <button
-                onClick={fetchMembers}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                disabled={loading.members}
-              >
-                {loading.members ? "Refreshing..." : "Refresh Members"}
-              </button>
+        <section
+          className="mb-12 rounded-3xl p-8"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          <CommitteeForm
+            onSave={handleSave}
+            editingMember={editingMember}
+            onCancelEdit={handleCancelEdit}
+            saving={saving}
+          />
+        </section>
+
+        <section
+          className="rounded-3xl p-6"
+          style={{
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+          }}
+        >
+          <h2 className="text-2xl font-bold mb-6" style={{ color: "#4f6d33" }}>
+            Committee Members
+          </h2>
+
+          {sortedMembers.length === 0 ? (
+            <p className="text-center text-gray-700">
+              No committee members found.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {sortedMembers.map((member) => (
+                <TeamMemberCard
+                  key={member.id}
+                  member={member}
+                  onClick={() => handleEdit(member)}
+                  onEdit={() => handleEdit(member)}
+                  onDelete={() => handleDelete(member.id)}
+                  showActions
+                  disabled={saving}
+                />
+              ))}
             </div>
-
-            {loading.members ? (
-              <div className="flex justify-center py-12">
-                <LoadingSpinner />
-              </div>
-            ) : error ? (
-              <div className="text-center py-12 text-red-600">
-                {error}
-                <button
-                  onClick={fetchMembers}
-                  className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : members.length === 0 ? (
-              <p className="text-gray-500">No committee members added yet</p>
-            ) : (
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {members.map((member) => (
-                  <div key={member.id} className="relative group">
-                    <TeamMemberCard
-                      member={member}
-                      onClick={() => handleEdit(member)}
-                      showActions
-                      onEdit={() => handleEdit(member)}
-                      onDelete={() => handleDelete(member.id)}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+          )}
+        </section>
+      </main>
+    </>
   );
 }

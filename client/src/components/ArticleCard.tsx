@@ -1,170 +1,92 @@
 import { Link } from "react-router-dom";
-import Button from "./ui/button";
-import type { MouseEvent } from "react";
 import type { Article } from "../models/Article";
+import defaultArticleImage from "../assets/default-article-image.png";
 
 interface ArticleCardProps {
-  article: Article;
-  onAuthorClick?: (author: string) => void;
-  onClick?: () => void;
-  showActions?: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onFeatureToggle?: () => void;
-  onPublishToggle?: () => void;
+  article: Article & { excerpt?: string };
 }
 
-export default function ArticleCard({
-  article,
-  onAuthorClick,
-  onClick,
-  showActions = false,
-  onEdit,
-  onDelete,
-  onFeatureToggle,
-  onPublishToggle,
-}: ArticleCardProps) {
-  const cardContent = (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300 h-full flex flex-col">
-      {article.featuredImage && (
-        <img
-          src={article.featuredImage}
-          alt={article.title}
-          className="w-full h-48 object-cover"
-        />
-      )}
-      <div className="p-6 flex-grow flex flex-col">
+export default function ArticleCard({ article }: ArticleCardProps) {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getImageUrl = () => {
+    if (!article.imageUrl) return defaultArticleImage;
+
+    if (article.imageUrl.startsWith("blob:")) {
+      return article.imageUrl;
+    }
+
+    if (
+      article.imageUrl.startsWith("http://") ||
+      article.imageUrl.startsWith("https://")
+    ) {
+      return article.imageUrl;
+    }
+
+    if (article.imageUrl.startsWith("/")) {
+      return `${import.meta.env.VITE_API_BASE_URL}${article.imageUrl}`;
+    }
+
+    return `${import.meta.env.VITE_API_BASE_URL}/${article.imageUrl}`;
+  };
+
+  const resolvedImageUrl = getImageUrl();
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.target as HTMLImageElement;
+    if (target.src !== defaultArticleImage) {
+      target.src = defaultArticleImage;
+    }
+  };
+
+  return (
+    <Link
+      to={`/articles/${article.id}`}
+      className="block no-underline text-inherit h-full bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden transform hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 flex flex-col"
+      style={{ border: "1px solid rgba(106, 139, 87, 0.3)" }}
+    >
+      <img
+        src={resolvedImageUrl}
+        alt={article.title}
+        className="w-full h-48 object-cover"
+        loading="lazy"
+        onError={handleImageError}
+      />
+      <div className="p-6 flex flex-col flex-grow">
         <div className="flex justify-between items-start gap-2 mb-2">
-          <h3 className="text-xl font-semibold text-gray-800 line-clamp-2 flex-grow">
+          <h3 className="text-xl font-semibold text-[#6A8B57] line-clamp-2 flex-grow">
             {article.title}
-            {article.isFeatured && (
-              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                Featured
-              </span>
-            )}
-            {!article.isPublished && (
-              <span className="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                Draft
-              </span>
-            )}
           </h3>
-          <span className="text-sm text-gray-500 whitespace-nowrap">
-            {new Date(
-              article.publishedAt || article.createdAt
-            ).toLocaleDateString()}
+          <span className="text-sm text-[#6A8B57]/70 whitespace-nowrap">
+            {formatDate(article.publishedAt || article.createdAt)}
           </span>
         </div>
 
-        <div className="mb-3">
-          {onAuthorClick ? (
-            <button
-              className="text-sm text-blue-600 hover:underline focus:outline-none text-left"
-              onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                onAuthorClick(article.author);
-              }}
-            >
-              By {article.author}
-            </button>
-          ) : (
-            <p className="text-sm text-gray-600">By {article.author}</p>
-          )}
-        </div>
-
-        <p className="text-gray-700 text-base line-clamp-3 mb-4 flex-grow">
-          {article.excerpt}
+        <p className="text-sm text-[#6A8B57]/90 mb-3">
+          By One Health Student Society
         </p>
 
-        {article.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {article.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        <p className="text-[#4a5c3a] text-base line-clamp-3 mb-4 flex-grow">
+          {article.excerpt ?? article.description}
+        </p>
 
-        {!showActions && (
-          <div className="flex justify-center mt-auto">
-            <span className="pointer-events-none">
-              <Button variant="outline">Read More</Button>
-            </span>
-          </div>
-        )}
-      </div>
-
-      {showActions && (
-        <div className="p-4 border-t border-gray-100 flex justify-between gap-2">
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                onFeatureToggle?.();
-              }}
-              className={
-                article.isFeatured ? "bg-yellow-50 text-yellow-600" : ""
-              }
-            >
-              {article.isFeatured ? "Unfeature" : "Feature"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                onPublishToggle?.();
-              }}
-              className={
-                article.isPublished ? "bg-green-50 text-green-600" : ""
-              }
-            >
-              {article.isPublished ? "Unpublish" : "Publish"}
-            </Button>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                onEdit?.();
-              }}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-red-600 hover:bg-red-50"
-              onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                onDelete?.();
-              }}
-            >
-              Delete
-            </Button>
-          </div>
+        <div className="flex justify-center mt-auto">
+          <button
+            className="border border-[#6A8B57] text-[#6A8B57] px-4 py-2 rounded hover:bg-[#6A8B57] hover:text-white transition"
+            onClick={(e) => e.preventDefault()}
+          >
+            Read More
+          </button>
         </div>
-      )}
-    </div>
-  );
-
-  return showActions ? (
-    <div onClick={onClick} className="h-full">
-      {cardContent}
-    </div>
-  ) : (
-    <Link
-      to={`/articles/${article.id}`}
-      className="block no-underline text-inherit h-full"
-    >
-      {cardContent}
+      </div>
     </Link>
   );
 }
