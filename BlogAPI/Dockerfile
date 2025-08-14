@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-alpine
+FROM eclipse-temurin:21-jdk-alpine AS build
 
 WORKDIR /app
 
@@ -12,10 +12,12 @@ RUN ./mvnw dependency:go-offline
 COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
-COPY target/*.jar BlogApiApplication.jar
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar BlogApiApplication.jar
 
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "BlogApiApplication.jar"]
-
-
