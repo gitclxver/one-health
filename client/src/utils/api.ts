@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const baseURL =
-  import.meta.env.VITE_API_BASE_URL || "https://one-health-api.onrender.com/api/v1";
+  import.meta.env.VITE_API_BASE_URL || "https://one-health-api.onrender.com/";
 
 const api = axios.create({
   baseURL: baseURL + "/api/v1", 
