@@ -68,8 +68,9 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/api/v1/articles/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/subscribe").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/unsubscribe").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/members/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
+                
                 // Everything else needs authentication
                 .anyRequest().authenticated()
             )
