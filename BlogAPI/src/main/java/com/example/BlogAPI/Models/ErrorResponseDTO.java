@@ -1,13 +1,31 @@
 package com.example.BlogAPI.Models;
 
 public class ErrorResponseDTO {
-    private final String message;
-
+    private String message;
+    private int status;
+    private long timestamp;
+    
+    public ErrorResponseDTO() {
+        this.timestamp = System.currentTimeMillis();
+    }
+    
     public ErrorResponseDTO(String message) {
+        this();
         this.message = message;
     }
-
-    public String getMessage() {
-        return message;
+    
+    public ErrorResponseDTO(String message, int status) {
+        this();
+        this.message = message;
+        this.status = status;
     }
+    
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
+    
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 }

@@ -34,4 +34,9 @@ public class AdminLoginDTO {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    @Override
+    public String toString() {
+        return "AdminLoginDTO{usernameOrEmail='" + usernameOrEmail + "'}";
+    }
 }

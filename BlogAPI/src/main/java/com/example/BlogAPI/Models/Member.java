@@ -28,9 +28,10 @@ public class Member {
     private String position;
 
     @NotBlank(message = "Bio is required")
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", length = 3000)
     private String bio;
 
+    @Column(name = "image_url" ,length = 3000)
     private String imageUrl;
 
     private boolean isActive = true;

@@ -40,21 +40,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String token = resolveToken(request);
-            if (token != null && jwtUtil.isTokenValid(token)) {
-                String email = jwtUtil.getUsernameFromToken(token);
+            if (token != null && jwtUtil.validateToken(token)) {
+                String username = jwtUtil.getUsernameFromToken(token);
+                String role = jwtUtil.getRoleFromToken(token);
+
+                String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+
                 UsernamePasswordAuthenticationToken authentication = 
                     new UsernamePasswordAuthenticationToken(
-                        email,
+                        username,
                         null,
-                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        List.of(new SimpleGrantedAuthority(roleWithPrefix))
                     );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (ExpiredJwtException e) {
             logger.warn("Expired JWT token: {}", e.getMessage());
             response.setHeader("X-Token-Expired", "true");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
+            return;
         } catch (JwtException e) {
             logger.warn("Invalid JWT token: {}", e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+            return;
         }
         
         chain.doFilter(request, response);

@@ -1,12 +1,15 @@
 package com.example.BlogAPI.Security;
 
-import com.example.BlogAPI.Models.Admin;
-import com.example.BlogAPI.Repositories.AdminRepository;
-import org.springframework.security.core.userdetails.*;
+import java.util.Collections;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import com.example.BlogAPI.Models.Admin;
+import com.example.BlogAPI.Repositories.AdminRepository;
 
 @Service
 public class AdminDetailsService implements UserDetailsService {
@@ -22,10 +25,12 @@ public class AdminDetailsService implements UserDetailsService {
         Admin admin = adminRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Admin not found with email: " + email));
 
+        String roleWithPrefix = "ROLE_" + admin.getRole().name();
+
         return new org.springframework.security.core.userdetails.User(
                 admin.getEmail(),
                 admin.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                Collections.singletonList(new SimpleGrantedAuthority(roleWithPrefix))
         );
     }
 }

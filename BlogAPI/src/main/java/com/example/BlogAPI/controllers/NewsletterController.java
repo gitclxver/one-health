@@ -1,48 +1,81 @@
 package com.example.BlogAPI.controllers;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.BlogAPI.Services.newsletterServices.NewsletterRetrievalService;
-import com.example.BlogAPI.Services.newsletterServices.NewsletterSendService;
-import com.example.BlogAPI.Services.newsletterServices.NewsletterSubscriptionService;
+import com.example.BlogAPI.Models.NewsletterSubscriber;
+import com.example.BlogAPI.Services.newsletterServices.NewsletterService;
 
 @RestController
-@RequestMapping("/api/v1/newsletter")
+@RequestMapping("/newsletter/admin")
 public class NewsletterController {
 
-    private final NewsletterSubscriptionService subscriptionService;
-    private final NewsletterRetrievalService retrievalService;
-    private final NewsletterSendService sendService;
+    private final NewsletterService newsletterService;
 
-    public NewsletterController(
-            NewsletterSubscriptionService subscriptionService,
-            NewsletterRetrievalService retrievalService,
-            NewsletterSendService sendService) {
-        this.subscriptionService = subscriptionService;
-        this.retrievalService = retrievalService;
-        this.sendService = sendService;
+    @Autowired
+    public NewsletterController(NewsletterService newsletterService) {
+        this.newsletterService = newsletterService;
+    }
+
+    @GetMapping("/subscribers")
+    public List<NewsletterSubscriber> getSubscribers() {
+        return newsletterService.getAllSubscribers();
     }
 
     @PostMapping("/subscribe")
-    public ResponseEntity<String> subscribe(@RequestBody String email) {
-        return ResponseEntity.ok(subscriptionService.subscribe(email));
+    public ResponseEntity<?> addSubscriber(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body("Email is required");
+        }
+        try {
+            NewsletterSubscriber saved = newsletterService.addSubscriber(email);
+            return ResponseEntity.ok(saved);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @GetMapping("/admin/subscribers")
-    public ResponseEntity<List<String>> getSubscribers() {
-        return ResponseEntity.ok(retrievalService.getAllSubscriberEmails());
+    @PatchMapping("/subscribers/{id}/toggle")
+    public ResponseEntity<?> toggleSubscriberStatus(@PathVariable Long id) {
+        try {
+            NewsletterSubscriber updated = newsletterService.toggleSubscriberStatus(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @PostMapping("/admin/send/{articleId}")
-    public ResponseEntity<String> sendNewsletter(@PathVariable Long articleId) {
-        return ResponseEntity.ok(sendService.sendNewsletter(articleId));
+    @PostMapping("/send/{articleId}")
+    public ResponseEntity<?> sendNewsletter(@PathVariable Long articleId) {
+        newsletterService.sendNewsletter(articleId);
+        return ResponseEntity.ok(Map.of("message", "Newsletter sent"));
     }
+
+    @PostMapping("/unsubscribe")
+public ResponseEntity<?> unsubscribe(@RequestParam("email") String email) {
+    var optional = newsletterService.getAllSubscribers()
+        .stream()
+        .filter(sub -> sub.getEmail().equalsIgnoreCase(email))
+        .findFirst();
+
+    if (optional.isEmpty()) {
+        return ResponseEntity.badRequest().body("Subscriber not found");
+    }
+
+    NewsletterSubscriber subscriber = optional.get();
+    subscriber.setActive(false);
+    return ResponseEntity.ok(newsletterService.toggleSubscriberStatus(subscriber.getId()));
+}
 }

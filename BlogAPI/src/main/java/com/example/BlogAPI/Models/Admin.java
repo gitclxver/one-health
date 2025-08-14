@@ -1,48 +1,67 @@
 package com.example.BlogAPI.Models;
 
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-@Data
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "admins")
+@Table(name = "admins", 
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = "username"),
+           @UniqueConstraint(columnNames = "email")
+       })
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Admin {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotBlank(message = "Username is required")
-    @Column(unique = true)
+    
+    @NotBlank
+    @Size(max = 20)
+    @Column(nullable = false, unique = true)
     private String username;
-
-    @NotBlank(message = "Email is required")
+    
+    @NotBlank
+    @Size(max = 50)
     @Email
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
-
-    @NotBlank(message = "Password is required")
-    private String password; // Store hashed password only
-
+    
+    @NotBlank
+    @Size(max = 120)
     @Column(nullable = false)
-    private String role = "ADMIN";
+    private String password;
+    
+    @Column(nullable = false)
+    private boolean isActive = true;
     
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    private LocalDateTime lastLogin;
-
-    private boolean isActive = true;
-
     
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.ADMIN;
+    
+    public enum Role {
+        ADMIN,
+        SUPER_ADMIN
+    }
 }

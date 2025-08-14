@@ -31,8 +31,8 @@ public class Article {
     @NotBlank
     @Column(columnDefinition = "TEXT")
     private String content;
-
-    private Long authorId;
+    
+    @Column(name = "image_url")
     private String imageUrl;
 
     @CreationTimestamp
