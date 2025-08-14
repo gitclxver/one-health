@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 .prod.env
 
+
 ### STS ###
 .apt_generated
 .classpath
@@ -32,3 +33,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+db/
+init.sql
