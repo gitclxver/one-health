@@ -2,6 +2,8 @@ FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
 
+RUN ./mvnw clean package
+
 COPY target/*.jar BlogApiApplication.jar
 
 EXPOSE 8080
