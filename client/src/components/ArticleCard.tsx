@@ -79,12 +79,12 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         </p>
 
         <div className="flex justify-center mt-auto">
-          <button
+          <Link
+            to={`/articles/${article.id}`}
             className="border border-[#6A8B57] text-[#6A8B57] px-4 py-2 rounded hover:bg-[#6A8B57] hover:text-white transition"
-            onClick={(e) => e.preventDefault()}
           >
             Read More
-          </button>
+          </Link>
         </div>
       </div>
     </Link>

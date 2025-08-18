@@ -64,11 +64,14 @@ public class SecurityConfiguration {
                 // Public endpoints
                 .requestMatchers("/api/v1/admin/login").permitAll()
                 .requestMatchers("/api/v1/admin/refresh").permitAll()
+                .requestMatchers("/api/v1/uploads/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/articles/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/subscribe").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/unsubscribe").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/newsletter/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/members/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/events/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 
                 // Everything else needs authentication

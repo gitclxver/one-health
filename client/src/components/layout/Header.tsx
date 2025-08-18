@@ -62,6 +62,12 @@ export default function Header() {
               >
                 Articles
               </Link>
+              <Link
+                to="/events"
+                className="text-white hover:text-[#cde3c7] font-semibold transition-colors px-3 py-2 rounded-md text-sm lg:text-base"
+              >
+                Events
+              </Link>
             </div>
           </div>
 
@@ -102,6 +108,13 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Articles
+              </Link>
+              <Link
+                to="/events"
+                className="text-white hover:text-[#cde3c7] font-semibold transition-colors px-3 py-2 rounded-md text-base"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Events
               </Link>
               <a
                 href="https://docs.google.com/forms/d/e/1FAIpQLSeWJGyDt76QY3FjPzcREUjfyJ_yfIo9g34Vdid3jT5h3l3ILg/viewform"

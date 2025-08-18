@@ -17,7 +17,6 @@ export default function NewsletterSignup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic email validation
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setMessage({
         text: "Please enter a valid email address.",
@@ -32,14 +31,16 @@ export default function NewsletterSignup() {
     try {
       await subscribeToNewsletter(email);
       setMessage({
-        text: "✅ Subscribed! Please check your inbox for future updates.",
+        text: "✅ Subscribed! Please check your inbox to verify your email.",
         type: "success",
       });
       setEmail("");
     } catch (error) {
       let errorMessage = "Subscription failed. Please try again later.";
       if (isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || errorMessage;
+        errorMessage =
+          error.response?.data?.message ||
+          "Something went wrong. Are you already subscribed?";
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }

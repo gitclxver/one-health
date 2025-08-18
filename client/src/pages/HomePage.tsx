@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import ArticleCard from "../components/ArticleCard";
 import TeamMemberCard from "../components/TeamMemberCard";
+import EventCard from "../components/EventCard";
 import NewsletterSignup from "../components/NewsletterSignUp";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useArticlesStore } from "../store/useArticlesStore";
 import { useMembersStore } from "../store/useMembersStore";
+import { useEventStore } from "../store/useEventStore";
 
 import heroGlobeImage from "../assets/hero-globe-image.svg";
 import aimImage from "../assets/aim-image.jpg";
@@ -27,10 +29,19 @@ export default function HomePage() {
     fetchAdminArticles,
   } = useArticlesStore();
 
+  const {
+    upcomingEvents,
+    loading: eventsLoading,
+    error: eventsError,
+    fetchUpcomingEvents,
+    selectEvent,
+  } = useEventStore();
+
   useEffect(() => {
     fetchAndSetMembers();
     fetchAdminArticles();
-  }, [fetchAdminArticles, fetchAndSetMembers]);
+    fetchUpcomingEvents();
+  }, [fetchAdminArticles, fetchAndSetMembers, fetchUpcomingEvents]);
 
   useEffect(() => {
     const interval = setInterval(rotateCurrentMember, 5000);
@@ -39,7 +50,7 @@ export default function HomePage() {
 
   const currentMember = committeeMembers?.[currentMemberIndex] ?? null;
   const displayArticles = articles.slice(0, 3);
-
+  const displayEvents = upcomingEvents.slice(0, 3);
   // --- Helper components for conditional rendering ---
 
   const CommitteeSection = () => {
@@ -136,6 +147,75 @@ export default function HomePage() {
     );
   };
 
+  const EventsSection = () => {
+    if (eventsLoading) {
+      return (
+        <div className="flex justify-center py-8">
+          <LoadingSpinner />
+        </div>
+      );
+    }
+
+    if (eventsError) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-red-600 mb-4">{eventsError}</p>
+          <button
+            onClick={fetchUpcomingEvents}
+            className="px-4 py-2 bg-[#6A8B57] text-white rounded hover:bg-[#567544] text-sm"
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    if (!upcomingEvents.length) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500 mb-4">No upcoming events scheduled</p>
+          <Link
+            to="/events"
+            className="inline-flex items-center text-[#6A8B57] hover:text-[#567544] transition-colors text-lg font-semibold"
+          >
+            View All Events
+            <svg
+              className="ml-2 w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </Link>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        {displayEvents.map((event) => (
+          <div
+            key={event.id}
+            onClick={() => {
+              selectEvent(event);
+              window.history.pushState({}, "", `/events/${event.id}`);
+            }}
+            className="cursor-pointer"
+          >
+            <EventCard event={event} />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Background Gradient */}
@@ -208,6 +288,42 @@ export default function HomePage() {
             Meet Our Committee
           </h2>
           <CommitteeSection />
+        </section>
+
+        <section className="mb-12 lg:mb-16 px-2 sm:px-0">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">
+              Upcoming Events
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
+              Join us for our next gatherings and workshops
+            </p>
+          </div>
+          <EventsSection />
+          {upcomingEvents.length > 0 && (
+            <div className="text-center mt-8">
+              <Link
+                to="/events"
+                className="inline-flex items-center text-[#6A8B57] hover:text-[#567544] transition-colors text-lg font-semibold"
+              >
+                View All Events
+                <svg
+                  className="ml-2 w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </Link>
+            </div>
+          )}
         </section>
 
         {/* Movement Section */}

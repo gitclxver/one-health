@@ -54,6 +54,12 @@ export default function AdminHeader() {
               >
                 Manage Committee Members
               </Link>
+              <Link
+                to="/admin/events"
+                className="text-white hover:text-[#cde3c7] font-semibold transition-colors px-3 py-2 rounded-md text-sm"
+              >
+                Manage Events
+              </Link>
             </div>
           </div>
 

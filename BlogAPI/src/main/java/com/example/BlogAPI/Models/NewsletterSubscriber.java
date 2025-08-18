@@ -1,6 +1,7 @@
 package com.example.BlogAPI.Models;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,12 +34,29 @@ public class NewsletterSubscriber {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Column(nullable = false)
+    private boolean isVerified = false;
+
+    @Column
+    private String verificationToken;
+
+    @Column
+    private LocalDateTime tokenExpiry;
+
+    @Column
+    private LocalDateTime lastVerificationEmailSentAt;
+
+
+
     public NewsletterSubscriber() {}
 
     public NewsletterSubscriber(String email) {
         this.email = email;
         this.subscribedAt = LocalDateTime.now();
         this.isActive = true;
+        this.isVerified = false;
+        this.verificationToken = UUID.randomUUID().toString();
+        this.tokenExpiry = LocalDateTime.now().plusMinutes(30);
     }
 
     public Long getId() {
@@ -68,4 +86,37 @@ public class NewsletterSubscriber {
     public void setActive(boolean active) {
         isActive = active;
     }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    public void setVerified(boolean verified) {
+        isVerified = verified;
+    }
+
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
+    }
+
+    public LocalDateTime getTokenExpiry() {
+        return tokenExpiry;
+    }
+
+    public void setTokenExpiry(LocalDateTime tokenExpiry) {
+        this.tokenExpiry = tokenExpiry;
+    }
+
+    public LocalDateTime getLastVerificationEmailSentAt() {
+        return lastVerificationEmailSentAt;
+    }
+
+    public void setLastVerificationEmailSentAt(LocalDateTime lastVerificationEmailSentAt) {
+        this.lastVerificationEmailSentAt = lastVerificationEmailSentAt;
+    }
+
 }

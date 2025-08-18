@@ -1,6 +1,7 @@
 import api from "../../utils/api";
 import type { NewsletterSubscriber } from "../../models/NewsletterSubscriber";
 
+// ======== Get all subscribers ========
 export const getNewsletterSubscribers = async (): Promise<
   NewsletterSubscriber[]
 > => {
@@ -8,6 +9,7 @@ export const getNewsletterSubscribers = async (): Promise<
   return response.data;
 };
 
+// ======== Toggle subscriber status (active/inactive) ========
 export const toggleSubscriberStatus = async (
   id: number
 ): Promise<NewsletterSubscriber> => {
@@ -17,6 +19,7 @@ export const toggleSubscriberStatus = async (
   return response.data;
 };
 
+// ======== Send newsletter for a specific article ========
 export const sendNewsletter = async (
   articleId: number
 ): Promise<{ message: string }> => {
