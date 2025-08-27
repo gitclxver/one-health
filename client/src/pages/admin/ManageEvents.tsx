@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { EventFormData } from "../../models/Event";
+import type { Event } from "../../models/Event";
 import { useEventStore } from "../../store/useEventStore";
 import AdminHeader from "../../components/admin/AdminHeader";
 import EventsForm from "./events/EventsForm";
@@ -11,7 +11,6 @@ export default function ManageEvents() {
     editingEvent,
     setEditingEvent,
     fetchAllEvents,
-    saveEvent,
     deleteEvent,
     saving,
   } = useEventStore();
@@ -20,23 +19,8 @@ export default function ManageEvents() {
     fetchAllEvents();
   }, [fetchAllEvents]);
 
-  const handleSave = async (
-    event: EventFormData,
-    onSaved?: (id: number) => void
-  ) => {
-    try {
-      const saved = await saveEvent(event);
-      onSaved?.(saved.id);
-      setEditingEvent(null);
-    } catch (e) {
-      alert("Failed to save event.");
-      console.error(e);
-    }
-  };
-
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this event?")) return;
-
     try {
       await deleteEvent(id);
     } catch (e) {
@@ -70,10 +54,8 @@ export default function ManageEvents() {
 
         <section className="mb-12 rounded-3xl p-8 bg-white/25 backdrop-blur-md border border-white/20">
           <EventsForm
-            onSave={handleSave}
-            editingEvent={editingEvent ?? undefined}
-            onCancelEdit={() => setEditingEvent(null)}
-            saving={saving}
+            event={editingEvent ?? undefined} // renamed prop to match form
+            onCancel={() => setEditingEvent(null)}
           />
         </section>
 
@@ -84,14 +66,13 @@ export default function ManageEvents() {
             <p className="text-center text-gray-700">No events available.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {sortedEvents.map((event) => (
+              {sortedEvents.map((event: Event) => (
                 <EventCardAdmin
                   key={event.id}
                   event={event}
                   onEdit={() => setEditingEvent(event)}
                   onDelete={() => handleDelete(event.id)}
                   onClick={() => setEditingEvent(event)}
-                  
                   disabled={saving}
                 />
               ))}

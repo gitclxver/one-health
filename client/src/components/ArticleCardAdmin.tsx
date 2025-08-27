@@ -65,17 +65,20 @@ export default function ArticleCardAdmin({
 
   const handleClick = () => {
     if (!disabled && onClick) {
-      onClick(); // ✅ Trigger the onClick from parent (which includes navigate)
+      onClick();
     }
   };
 
   return (
     <div
       onClick={handleClick}
-      className={`bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-full transition hover:shadow-xl ${
+      className={`bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden flex flex-col h-full transform transition hover:scale-[1.02] hover:shadow-2xl ${
         disabled ? "opacity-50 pointer-events-none" : "cursor-pointer"
       }`}
-      style={{ border: "1px solid rgba(106, 139, 87, 0.3)" }}
+      style={{
+        border: "1px solid rgba(106, 139, 87, 0.3)",
+        minWidth: "280px",
+      }}
     >
       <img
         src={resolvedImageUrl}

@@ -4,7 +4,8 @@ import {
   createCommitteeMember,
   updateCommitteeMember,
   deleteCommitteeMember,
-} from "../services/admin/adminMemberService"; 
+  uploadMemberImage as uploadMemberImageApi,
+} from "../services/admin/adminMemberService";
 import type { Member } from "../models/Member";
 
 interface MembersState {
@@ -13,10 +14,9 @@ interface MembersState {
   selectedMember: Member | null;
   isModalOpen: boolean;
   loading: boolean;
-  error: string | null;
-
-  editingMember: Member | null;
   saving: boolean;
+  error: string | null;
+  editingMember: Member | null;
 
   fetchAndSetMembers: () => Promise<void>;
   rotateCurrentMember: () => void;
@@ -28,6 +28,7 @@ interface MembersState {
     member: Omit<Member, "id" | "joinDate"> & { id?: number }
   ) => Promise<Member>;
   deleteMember: (id: number) => Promise<void>;
+  uploadMemberImage: (memberId: number, imageFile: File) => Promise<Member>;
 }
 
 export const useMembersStore = create<MembersState>((set, get) => ({
@@ -36,10 +37,9 @@ export const useMembersStore = create<MembersState>((set, get) => ({
   selectedMember: null,
   isModalOpen: false,
   loading: false,
-  error: null,
-
-  editingMember: null,
   saving: false,
+  error: null,
+  editingMember: null,
 
   fetchAndSetMembers: async () => {
     set({ loading: true, error: null });
@@ -47,11 +47,10 @@ export const useMembersStore = create<MembersState>((set, get) => ({
       const members = await fetchCommitteeMembers();
       set({ committeeMembers: members, loading: false });
     } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
-      set({
-        error: error || "Failed to load Committee Members. Please try again.",
-        loading: false,
-      });
+      const error =
+        err instanceof Error ? err.message : "Failed to load members";
+      set({ error, loading: false });
+      throw error;
     }
   },
 
@@ -69,7 +68,7 @@ export const useMembersStore = create<MembersState>((set, get) => ({
   setEditingMember: (member) => set({ editingMember: member }),
 
   saveMember: async (member) => {
-    set({ saving: true });
+    set({ saving: true, error: null });
     try {
       let saved: Member;
       if (member.id) {
@@ -77,25 +76,42 @@ export const useMembersStore = create<MembersState>((set, get) => ({
       } else {
         saved = await createCommitteeMember(member);
       }
-      // Refresh members after save
       await get().fetchAndSetMembers();
       set({ saving: false });
       return saved;
-    } catch (error) {
-      set({ saving: false });
+    } catch (err) {
+      const error =
+        err instanceof Error ? err.message : "Failed to save member";
+      set({ error, saving: false });
       throw error;
     }
   },
 
   deleteMember: async (id) => {
-    set({ saving: true });
+    set({ saving: true, error: null });
     try {
       await deleteCommitteeMember(id);
-      // Refresh members after delete
       await get().fetchAndSetMembers();
       set({ saving: false });
-    } catch (error) {
+    } catch (err) {
+      const error =
+        err instanceof Error ? err.message : "Failed to delete member";
+      set({ error, saving: false });
+      throw error;
+    }
+  },
+
+  uploadMemberImage: async (memberId, imageFile) => {
+    set({ saving: true, error: null });
+    try {
+      const updatedMember = await uploadMemberImageApi(memberId, imageFile);
+      await get().fetchAndSetMembers();
       set({ saving: false });
+      return updatedMember;
+    } catch (err) {
+      const error =
+        err instanceof Error ? err.message : "Failed to upload image";
+      set({ error, saving: false });
       throw error;
     }
   },

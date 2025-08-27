@@ -1,5 +1,6 @@
 package com.example.BlogAPI.Models;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,7 +35,7 @@ public class Event {
     private String imageUrl;
 
     @NotNull(message = "Event date is required")
-    private LocalDateTime eventDate;
+    private LocalDate eventDate;
 
     private String location;
 
@@ -45,6 +46,6 @@ public class Event {
     private LocalDateTime updatedAt;
 
     public boolean isPastEvent() {
-        return eventDate.isBefore(LocalDateTime.now());
+        return eventDate.isBefore(LocalDate.now());
     }
 }

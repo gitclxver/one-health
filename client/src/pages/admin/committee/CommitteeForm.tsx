@@ -1,28 +1,15 @@
 import { useEffect, useState, useRef } from "react";
 import type { Member } from "../../../models/Member";
-import {
-  uploadTempImage,
-  finalizeTempImage,
-} from "../../../services/admin/adminMemberService";
+import { useMembersStore } from "../../../store/useMembersStore";
 
 interface Props {
-  onSave: (
-    member: Omit<Member, "id" | "joinDate"> & { id?: number },
-    onSaved?: (id: number) => void
-  ) => void;
   editingMember?: Member | null;
   onCancelEdit: () => void;
-  saving: boolean;
 }
 
 const DESCRIPTION_LIMIT = 250;
 
-export default function CommitteeForm({
-  onSave,
-  editingMember,
-  onCancelEdit,
-  saving,
-}: Props) {
+export default function CommitteeForm({ editingMember, onCancelEdit }: Props) {
   const [member, setMember] = useState<Member>({
     id: 0,
     name: "",
@@ -38,7 +25,9 @@ export default function CommitteeForm({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset form when not editing
+  const { saveMember, uploadMemberImage, saving, error } = useMembersStore();
+
+  // Reset form
   const resetForm = () => {
     setMember({
       id: 0,
@@ -56,7 +45,7 @@ export default function CommitteeForm({
   useEffect(() => {
     if (editingMember) {
       setMember(editingMember);
-      setPreviewUrl(null); // don't use blob in edit mode
+      setPreviewUrl(null);
     } else {
       resetForm();
     }
@@ -67,10 +56,7 @@ export default function CommitteeForm({
   ) => {
     const { name, value } = e.target;
 
-    if (name === "bio") {
-      // Enforce character limit
-      if (value.length > DESCRIPTION_LIMIT) return;
-    }
+    if (name === "bio" && value.length > DESCRIPTION_LIMIT) return;
 
     setMember((prev) => ({ ...prev, [name]: value }));
   };
@@ -79,13 +65,10 @@ export default function CommitteeForm({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       setUploadError("Please select a valid image file");
       return;
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setUploadError("Image size must be less than 5MB");
       return;
@@ -95,18 +78,13 @@ export default function CommitteeForm({
     setUploadError(null);
 
     try {
-      const uploadedPath = await uploadTempImage(file);
-      setMember((prev) => ({ ...prev, imageUrl: uploadedPath }));
-
-      const blobUrl = URL.createObjectURL(file);
-      setPreviewUrl(blobUrl);
-    } catch (error) {
-      console.error("Image upload failed:", error);
-      setUploadError("Failed to upload image. Please try again.");
+      setPreviewUrl(URL.createObjectURL(file));
+    } catch (err) {
+      console.error("Image preview failed:", err);
+      setUploadError("Failed to process image. Please try again.");
     } finally {
       setIsUploadingImage(false);
     }
-
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,22 +100,24 @@ export default function CommitteeForm({
       id: member.id || undefined,
     };
 
-    const isTemp = member.imageUrl?.includes("temp-");
+    try {
+      const savedMember = await saveMember(memberData);
 
-    const onSavedCallback = async (savedId: number) => {
-      if (isTemp && savedId && member.imageUrl) {
-        try {
-          await finalizeTempImage(member.imageUrl, savedId);
-        } catch {
-          // Silent catch for finalizing image
-        }
+      // Upload image after member is created/updated
+      if (previewUrl && fileInputRef.current?.files?.[0] && savedMember.id) {
+        const file = fileInputRef.current.files[0];
+        await uploadMemberImage(savedMember.id, file);
       }
+
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
-    };
 
-    onSave(memberData, onSavedCallback);
+      resetForm();
+      onCancelEdit();
+    } catch (err) {
+      console.error("Failed to save member:", err);
+    }
   };
 
   const handleCancel = () => {
@@ -154,13 +134,7 @@ export default function CommitteeForm({
     }
   };
 
-  const resolvedImageUrl = previewUrl
-    ? previewUrl
-    : member.imageUrl?.startsWith("http") || member.imageUrl?.startsWith("/")
-    ? member.imageUrl
-    : member.imageUrl
-    ? `${import.meta.env.VITE_API_BASE_URL}/${member.imageUrl}`
-    : "";
+  const resolvedImageUrl = previewUrl || member.imageUrl || "";
 
   return (
     <form
@@ -173,6 +147,12 @@ export default function CommitteeForm({
         border: "1px solid rgba(255, 255, 255, 0.18)",
       }}
     >
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center">
+          {error}
+        </div>
+      )}
+
       <div className="flex justify-center mb-8">
         <div
           className={`w-32 h-32 rounded-full overflow-hidden bg-gray-200 cursor-pointer hover:opacity-80 transition relative ${
@@ -189,12 +169,12 @@ export default function CommitteeForm({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
-              {isUploadingImage ? "Uploading..." : "Add Image"}
+              {isUploadingImage ? "Processing..." : "Add Image"}
             </div>
           )}
           {isUploadingImage && (
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="text-white text-xs">Uploading...</div>
+              <div className="text-white text-xs">Processing...</div>
             </div>
           )}
           <input

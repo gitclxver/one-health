@@ -1,6 +1,6 @@
 package com.example.BlogAPI.Repositories;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,9 +10,9 @@ import com.example.BlogAPI.Models.Event;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-    List<Event> findByEventDateAfterOrderByEventDateAsc(LocalDateTime date);
+    List<Event> findByEventDateAfterOrderByEventDateAsc(LocalDate date);
     
-    List<Event> findByEventDateBeforeOrderByEventDateDesc(LocalDateTime date);
+    List<Event> findByEventDateBeforeOrderByEventDateDesc(LocalDate date);
     
     List<Event> findAllByOrderByEventDateAsc();
 }

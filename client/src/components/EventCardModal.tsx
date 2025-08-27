@@ -30,10 +30,7 @@ export default function EventModal() {
     return format(date, "MMMM d, yyyy 'at' h:mm a");
   };
 
-  const isPastEvent = () => {
-    if (!event.eventDate) return false;
-    return new Date(event.eventDate) < new Date();
-  };
+  const isPastEvent = new Date(event.eventDate) < new Date();
 
   return (
     <Transition appear show={isModalOpen} as={Fragment}>
@@ -61,14 +58,7 @@ export default function EventModal() {
             leaveTo="opacity-0 scale-95 translate-y-4"
           >
             <Dialog.Panel
-              className="
-                w-full max-w-3xl
-                bg-white/70 backdrop-blur-md border border-[#6A8B57]/30 rounded-2xl
-                shadow-lg
-                flex flex-col md:flex-row
-                overflow-hidden
-                relative
-              "
+              className="w-full max-w-3xl bg-white/70 backdrop-blur-md border border-[#6A8B57]/30 rounded-2xl shadow-lg flex flex-col md:flex-row overflow-hidden relative"
               style={{ minHeight: "28rem" }}
             >
               <button
@@ -79,7 +69,6 @@ export default function EventModal() {
                 &times;
               </button>
 
-              {/* Left side: Image */}
               <div className="flex-shrink-0 md:w-1/2 h-64 md:h-auto overflow-hidden">
                 <img
                   src={resolvedImageUrl}
@@ -88,17 +77,16 @@ export default function EventModal() {
                 />
               </div>
 
-              {/* Right side: Content */}
               <div className="md:w-1/2 flex flex-col p-6 text-left">
                 <div className="mb-4">
                   <span
                     className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-                      isPastEvent()
+                      isPastEvent
                         ? "bg-gray-200 text-gray-700"
                         : "bg-[#6A8B57]/10 text-[#6A8B57]"
                     }`}
                   >
-                    {isPastEvent() ? "Past Event" : "Upcoming Event"}
+                    {isPastEvent ? "Past Event" : "Upcoming Event"}
                   </span>
                 </div>
 
@@ -110,28 +98,27 @@ export default function EventModal() {
                 </Dialog.Title>
 
                 <div className="mb-6">
-                  <div className="flex items-center mb-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-[#6A8B57] mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span className="text-[#38491f]">
-                      {formatDate(event.eventDate)}
-                    </span>
-                  </div>
-
+                  {event.eventDate && (
+                    <div className="flex items-center mb-2 text-[#38491f]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-[#6A8B57] mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span>{formatDate(event.eventDate)}</span>
+                    </div>
+                  )}
                   {event.location && (
-                    <div className="flex items-center">
+                    <div className="flex items-center text-[#38491f]">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5 text-[#6A8B57] mr-2"
@@ -152,7 +139,7 @@ export default function EventModal() {
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                      <span className="text-[#38491f]">{event.location}</span>
+                      <span>{event.location}</span>
                     </div>
                   )}
                 </div>

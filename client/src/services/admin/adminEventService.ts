@@ -1,5 +1,6 @@
 import api from "../../utils/api";
 import type { Event, EventFormData } from "../../models/Event";
+import { uploadImageToSupabase } from "../../utils/uploadImage";
 
 export const createEvent = async (eventData: EventFormData): Promise<Event> => {
   const response = await api.post("/events/admin", eventData);
@@ -18,47 +19,18 @@ export const deleteEvent = async (id: number): Promise<void> => {
   await api.delete(`/events/admin/${id}`);
 };
 
-export const uploadTempEventImage = async (
-  imageFile: File
-): Promise<string> => {
-  const formData = new FormData();
-  formData.append("image", imageFile);
-
-  const response = await api.post("/events/admin/upload-temp", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-
-  return response.data;
-};
-
-export const finalizeEventImage = async (
-  tempImagePath: string,
-  eventId: number
-): Promise<string> => {
-  const response = await api.post(`/events/admin/finalize-image/${eventId}`, {
-    tempPath: tempImagePath,
-  });
-
-  return response.data;
-};
-
+// ======== Upload event image (Supabase flow) ========
 export const uploadEventImage = async (
   eventId: number,
   imageFile: File
-): Promise<{ imageUrl: string }> => {
-  const formData = new FormData();
-  formData.append("image", imageFile);
+): Promise<Event> => {
+  // 1. Upload to Supabase
+  const imageUrl = await uploadImageToSupabase(imageFile, "events");
 
-  const response = await api.post(
-    `/events/admin/upload-image/${eventId}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  // 2. Save URL in backend
+  const response = await api.put(`/events/admin/${eventId}/image`, {
+    imageUrl,
+  });
+
   return response.data;
 };

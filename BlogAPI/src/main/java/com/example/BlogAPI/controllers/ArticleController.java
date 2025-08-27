@@ -1,11 +1,8 @@
 package com.example.BlogAPI.controllers;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.example.BlogAPI.Models.Article;
 import com.example.BlogAPI.Services.articleServices.ArticleService;
@@ -82,6 +78,11 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.publishArticle(id));
     }
 
+    @PutMapping("/admin/{id}/unpublish")
+    public ResponseEntity<Article> unpublishArticle(@PathVariable Long id) {
+        return ResponseEntity.ok(articleService.unpublishArticle(id));
+    }
+
     @PutMapping("/admin/{id}/publish")
     public ResponseEntity<Article> togglePublishStatus(
         @PathVariable Long id,
@@ -94,60 +95,22 @@ public class ArticleController {
         return ResponseEntity.ok(updatedArticle);
     }
 
-    @PostMapping("/admin/{id}/feature")
-    public ResponseEntity<Article> toggleFeatureArticle(
-            @PathVariable Long id,
-            @RequestParam boolean featured) {
-        return ResponseEntity.ok(articleService.toggleFeature(id, featured));
-    }
-
     // ===== Image Handling =====
 
-    @PostMapping("/admin/upload-temp")
-    public ResponseEntity<String> uploadTempImage(@RequestParam("image") MultipartFile file) {
-        try {
-            String filename = articleService.saveTempImage(file);
-            return ResponseEntity.ok("/uploads/articles/" + filename);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload image: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/admin/finalize-image/{articleId}")
-    public ResponseEntity<String> finalizeTempImage(
-            @PathVariable Long articleId,
+    @PutMapping("/admin/{id}/image")
+    public ResponseEntity<Article> updateArticleImage(
+            @PathVariable Long id, 
             @RequestBody Map<String, String> request) {
         try {
-            String tempPath = request.get("tempPath");
-            if (tempPath == null || tempPath.isEmpty()) {
-                return ResponseEntity.badRequest().body("tempPath is required");
+            String imageUrl = request.get("imageUrl");
+            if (imageUrl == null || imageUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().build();
             }
-            String finalImageUrl = articleService.finalizeTempImage(tempPath, articleId);
-            return ResponseEntity.ok(finalImageUrl);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to finalize image: " + e.getMessage());
+            
+            Article updatedArticle = articleService.updateImageUrl(id, imageUrl);
+            return ResponseEntity.ok(updatedArticle);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
     }
-
-    @PostMapping("/admin/upload-image/{articleId}")
-    public ResponseEntity<?> uploadImage(
-            @PathVariable Long articleId,
-            @RequestParam("image") MultipartFile file) { 
-        try {
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            String uploadDir = "uploads/articles/";
-
-            File dir = new File(uploadDir);
-            if (!dir.exists()) dir.mkdirs();
-
-            File destination = new File(uploadDir + filename);
-            file.transferTo(destination);
-
-            Article article = articleService.updateImageUrl(articleId, "/uploads/articles/" + filename);
-            return ResponseEntity.ok().body(Map.of("imageUrl", article.getImageUrl()));
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Image upload failed");
-        }
-    }
-
 }

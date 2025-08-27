@@ -43,12 +43,14 @@ export default function AdminDashboard() {
     saving: eventsSaving,
   } = useEventStore();
 
+  // Fetch only when tab opens & list is empty
   useEffect(() => {
     if (activeTab === "articles" && articles.length === 0) fetchAdminArticles();
     if (activeTab === "committee" && committeeMembers.length === 0)
       fetchAndSetMembers();
     if (activeTab === "events" && allEvents.length === 0) fetchAllEvents();
-  }, [activeTab, articles, committeeMembers, allEvents, fetchAdminArticles, fetchAndSetMembers, fetchAllEvents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const refreshData = () => {
     if (activeTab === "articles") fetchAdminArticles();
@@ -92,6 +94,25 @@ export default function AdminDashboard() {
   const sortedEvents = [...allEvents].sort(
     (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()
   );
+
+  // ---- Unified per-tab state for loader/error/empty ----
+  const isLoading =
+    (activeTab === "articles" && articlesLoading) ||
+    (activeTab === "committee" && membersLoading) ||
+    (activeTab === "events" && eventsLoading);
+
+  const currentError =
+    (activeTab === "articles" && articlesError) ||
+    (activeTab === "committee" && membersError) ||
+    (activeTab === "events" && eventsError) ||
+    null;
+    
+  const retryFn =
+    activeTab === "articles"
+      ? fetchAdminArticles
+      : activeTab === "committee"
+      ? fetchAndSetMembers
+      : fetchAllEvents;
 
   return (
     <>
@@ -149,132 +170,130 @@ export default function AdminDashboard() {
         </section>
 
         {/* Content Section */}
-        <section className="rounded-3xl p-8 bg-white/25 backdrop-blur-md border border-white/20">
-          {activeTab === "articles" &&
-            (articlesLoading ? (
-              <div className="flex justify-center py-16">
-                <LoadingSpinner size="lg" />
-              </div>
-            ) : articlesError ? (
-              <div className="text-center py-16 space-y-4">
-                <p className="text-xl text-red-600">{articlesError}</p>
-                <button
-                  onClick={fetchAdminArticles}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : articles.length === 0 ? (
-              <div className="text-center py-16 space-y-6">
-                <p className="text-xl text-gray-700">No articles found.</p>
-                <Link
-                  to="/admin/articles"
-                  className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
-                >
-                  Create Your First Article
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {articles.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    onClick={() => navigate("/admin/articles")}
-                    onEdit={() => navigate("/admin/articles")}
-                    onDelete={() => handleDeleteArticle(article.id)}
-                    disabled={articlesSaving}
-                  />
-                ))}
-              </div>
-            ))}
+        <section className="relative rounded-3xl p-8 bg-white/25 backdrop-blur-md border border-white/20">
+          {/* Loader Overlay (keeps content visible) */}
+          <div
+            className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+              isLoading ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="rounded-2xl bg-white/70 backdrop-blur-md px-6 py-5 shadow-lg border border-white/60">
+              <LoadingSpinner size="lg" />
+            </div>
+          </div>
 
-          {activeTab === "committee" &&
-            (membersLoading ? (
-              <div className="flex justify-center py-16">
-                <LoadingSpinner size="lg" />
-              </div>
-            ) : membersError ? (
-              <div className="text-center py-16 space-y-4">
-                <p className="text-xl text-red-600">{membersError}</p>
-                <button
-                  onClick={fetchAndSetMembers}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : committeeMembers.length === 0 ? (
-              <div className="text-center py-16 space-y-6">
-                <p className="text-xl text-gray-700">
-                  No committee members found.
-                </p>
-                <Link
-                  to="/admin/committee"
-                  className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
-                >
-                  Add First Committee Member
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {[...committeeMembers]
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((member) => (
-                    <TeamMemberCard
-                      key={member.id}
-                      member={member}
-                      showDescription={true}
-                      onClick={() => navigate("/admin/committee")}
-                      onEdit={() => navigate("/admin/committee")}
-                      onDelete={() => handleDeleteMember(member.id)}
-                      showActions
-                      disabled={membersSaving}
-                    />
-                  ))}
-              </div>
-            ))}
+          {/* Errors */}
+          {currentError ? (
+            <div className="text-center py-16 space-y-4">
+              <p className="text-xl text-red-600">{currentError}</p>
+              <button
+                onClick={retryFn}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Articles Tab */}
+              {activeTab === "articles" && (
+                <>
+                  {articles.length === 0 ? (
+                    <div className="text-center py-16 space-y-6">
+                      <p className="text-xl text-gray-700">
+                        No articles found.
+                      </p>
+                      <Link
+                        to="/admin/articles"
+                        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
+                      >
+                        Create Your First Article
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {articles.map((article) => (
+                        <ArticleCard
+                          key={article.id}
+                          article={article}
+                          onClick={() => navigate("/admin/articles")}
+                          onEdit={() => navigate("/admin/articles")}
+                          onDelete={() => handleDeleteArticle(article.id)}
+                          disabled={articlesSaving}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
 
-          {activeTab === "events" &&
-            (eventsLoading ? (
-              <div className="flex justify-center py-16">
-                <LoadingSpinner size="lg" />
-              </div>
-            ) : eventsError ? (
-              <div className="text-center py-16 space-y-4">
-                <p className="text-xl text-red-600">{eventsError}</p>
-                <button
-                  onClick={fetchAllEvents}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : sortedEvents.length === 0 ? (
-              <div className="text-center py-16 space-y-6">
-                <p className="text-xl text-gray-700">No events found.</p>
-                <Link
-                  to="/admin/events"
-                  className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
-                >
-                  Add First Event
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {sortedEvents.map((event) => (
-                  <EventCardAdmin
-                    key={event.id}
-                    event={event}
-                    onClick={() => navigate("/admin/events")}
-                    onEdit={() => navigate("/admin/events")}
-                    onDelete={() => handleDeleteEvent(event.id)}
-                    disabled={eventsSaving}
-                  />
-                ))}
-              </div>
-            ))}
+              {/* Committee Tab */}
+              {activeTab === "committee" && (
+                <>
+                  {committeeMembers.length === 0 ? (
+                    <div className="text-center py-16 space-y-6">
+                      <p className="text-xl text-gray-700">
+                        No committee members found.
+                      </p>
+                      <Link
+                        to="/admin/committee"
+                        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
+                      >
+                        Add First Committee Member
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                      {[...committeeMembers]
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((member) => (
+                          <TeamMemberCard
+                            key={member.id}
+                            member={member}
+                            showDescription={true}
+                            onClick={() => navigate("/admin/committee")}
+                            onEdit={() => navigate("/admin/committee")}
+                            onDelete={() => handleDeleteMember(member.id)}
+                            showActions
+                            disabled={membersSaving}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Events Tab */}
+              {activeTab === "events" && (
+                <>
+                  {sortedEvents.length === 0 ? (
+                    <div className="text-center py-16 space-y-6">
+                      <p className="text-xl text-gray-700">No events found.</p>
+                      <Link
+                        to="/admin/events"
+                        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
+                      >
+                        Add First Event
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                      {sortedEvents.map((event) => (
+                        <EventCardAdmin
+                          key={event.id}
+                          event={event}
+                          onClick={() => navigate("/admin/events")}
+                          onEdit={() => navigate("/admin/events")}
+                          onDelete={() => handleDeleteEvent(event.id)}
+                          disabled={eventsSaving}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
         </section>
       </main>
     </>

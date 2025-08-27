@@ -8,9 +8,8 @@ import {
 import {
   createEvent,
   updateEvent,
-  deleteEvent,
-  uploadTempEventImage,
-  finalizeEventImage,
+  deleteEvent as deleteEventApi,
+  uploadEventImage as uploadEventImageApi,
 } from "../services/admin/adminEventService";
 import type { Event, EventFormData } from "../models/Event";
 
@@ -19,28 +18,24 @@ interface EventsState {
   upcomingEvents: Event[];
   pastEvents: Event[];
   selectedEvent: Event | null;
+  editingEvent: Event | null; // Added editingEvent
   isModalOpen: boolean;
   loading: boolean;
-  error: string | null;
-  editingEvent: Event | null;
   saving: boolean;
-  currentEvent: Event | null;
+  error: string | null;
 
   fetchEventById: (id: number) => Promise<void>;
   fetchAllEvents: () => Promise<void>;
   fetchUpcomingEvents: () => Promise<void>;
   fetchPastEvents: () => Promise<void>;
   selectEvent: (event: Event) => void;
-  clearSelectedEvent: () => void;
-  openModal: () => void;
   closeModal: () => void;
 
-  setEditingEvent: (event: Event | null) => void;
+  setEditingEvent: (event: Event | null) => void; // Added setter
+
   saveEvent: (eventData: EventFormData) => Promise<Event>;
   deleteEvent: (id: number) => Promise<void>;
-
-  uploadTempImage: (imageFile: File) => Promise<string>;
-  finalizeImage: (tempPath: string, eventId: number) => Promise<string>;
+  uploadEventImage: (eventId: number, imageFile: File) => Promise<Event>;
 }
 
 export const useEventStore = create<EventsState>((set, get) => ({
@@ -48,21 +43,21 @@ export const useEventStore = create<EventsState>((set, get) => ({
   upcomingEvents: [],
   pastEvents: [],
   selectedEvent: null,
+  editingEvent: null, // Initialize editingEvent
   isModalOpen: false,
   loading: false,
-  error: null,
-  editingEvent: null,
   saving: false,
-  currentEvent: null,
+  error: null,
 
   fetchEventById: async (id) => {
     set({ loading: true, error: null });
     try {
       const event = await fetchEventById(id);
-      set({ currentEvent: event, loading: false });
+      set({ selectedEvent: event, loading: false, isModalOpen: true });
     } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
+      const error = err instanceof Error ? err.message : "Failed to load event";
       set({ error, loading: false });
+      throw error;
     }
   },
 
@@ -72,8 +67,10 @@ export const useEventStore = create<EventsState>((set, get) => ({
       const events = await fetchAllEvents();
       set({ allEvents: events, loading: false });
     } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
+      const error =
+        err instanceof Error ? err.message : "Failed to load events";
       set({ error, loading: false });
+      throw error;
     }
   },
 
@@ -83,8 +80,10 @@ export const useEventStore = create<EventsState>((set, get) => ({
       const events = await fetchUpcomingEvents();
       set({ upcomingEvents: events, loading: false });
     } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
+      const error =
+        err instanceof Error ? err.message : "Failed to load upcoming events";
       set({ error, loading: false });
+      throw error;
     }
   },
 
@@ -94,20 +93,20 @@ export const useEventStore = create<EventsState>((set, get) => ({
       const events = await fetchPastEvents();
       set({ pastEvents: events, loading: false });
     } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
+      const error =
+        err instanceof Error ? err.message : "Failed to load past events";
       set({ error, loading: false });
+      throw error;
     }
   },
 
-  selectEvent: (event) => set({ selectedEvent: event }),
-  clearSelectedEvent: () => set({ selectedEvent: null }),
-  openModal: () => set({ isModalOpen: true }),
+  selectEvent: (event) => set({ selectedEvent: event, isModalOpen: true }),
   closeModal: () => set({ isModalOpen: false, selectedEvent: null }),
 
-  setEditingEvent: (event) => set({ editingEvent: event }),
+  setEditingEvent: (event) => set({ editingEvent: event }), // Setter for editingEvent
 
   saveEvent: async (eventData) => {
-    set({ saving: true });
+    set({ saving: true, error: null });
     try {
       let saved: Event;
       if (eventData.id) {
@@ -115,7 +114,6 @@ export const useEventStore = create<EventsState>((set, get) => ({
       } else {
         saved = await createEvent(eventData);
       }
-      // Refresh events after save
       await Promise.all([
         get().fetchAllEvents(),
         get().fetchUpcomingEvents(),
@@ -123,43 +121,46 @@ export const useEventStore = create<EventsState>((set, get) => ({
       ]);
       set({ saving: false });
       return saved;
-    } catch (error) {
-      set({ saving: false });
+    } catch (err) {
+      const error = err instanceof Error ? err.message : "Failed to save event";
+      set({ error, saving: false });
       throw error;
     }
   },
 
   deleteEvent: async (id) => {
-    set({ saving: true });
+    set({ saving: true, error: null });
     try {
-      await deleteEvent(id);
-      // Refresh events after delete
+      await deleteEventApi(id);
       await Promise.all([
         get().fetchAllEvents(),
         get().fetchUpcomingEvents(),
         get().fetchPastEvents(),
       ]);
       set({ saving: false });
-    } catch (error) {
+    } catch (err) {
+      const error =
+        err instanceof Error ? err.message : "Failed to delete event";
+      set({ error, saving: false });
+      throw error;
+    }
+  },
+
+  uploadEventImage: async (eventId, imageFile) => {
+    set({ saving: true, error: null });
+    try {
+      const updatedEvent = await uploadEventImageApi(eventId, imageFile);
+      await Promise.all([
+        get().fetchAllEvents(),
+        get().fetchUpcomingEvents(),
+        get().fetchPastEvents(),
+      ]);
       set({ saving: false });
-      throw error;
-    }
-  },
-
-  uploadTempImage: async (imageFile) => {
-    try {
-      return await uploadTempEventImage(imageFile);
-    } catch (error) {
-      console.error("Error uploading temp image:", error);
-      throw error;
-    }
-  },
-
-  finalizeImage: async (tempPath, eventId) => {
-    try {
-      return await finalizeEventImage(tempPath, eventId);
-    } catch (error) {
-      console.error("Error finalizing image:", error);
+      return updatedEvent;
+    } catch (err) {
+      const error =
+        err instanceof Error ? err.message : "Failed to upload image";
+      set({ error, saving: false });
       throw error;
     }
   },

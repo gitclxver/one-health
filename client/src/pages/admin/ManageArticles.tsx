@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ArticleFormContainer from "./ArticleFormContainer";
-import ArticleCard from "../../components/ArticleCardAdmin";
+import ArticleCardAdmin from "../../components/ArticleCardAdmin";
 import AdminHeader from "../../components/admin/AdminHeader";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { toast } from "react-toastify";
@@ -81,6 +81,7 @@ export default function ManageArticles() {
       <AdminHeader />
 
       <main className="min-h-screen max-w-5xl mx-auto px-6 py-10">
+        {/* Header Section */}
         <section
           className="mb-8 rounded-3xl p-6 text-center"
           style={{
@@ -97,6 +98,7 @@ export default function ManageArticles() {
           </p>
         </section>
 
+        {/* Article Form Section */}
         <section
           className="mb-12 rounded-3xl p-8"
           style={{
@@ -134,6 +136,7 @@ export default function ManageArticles() {
           )}
         </section>
 
+        {/* Articles List Section */}
         <section
           className="rounded-3xl p-6"
           style={{
@@ -189,14 +192,9 @@ export default function ManageArticles() {
               </button>
             </div>
           ) : (
-            <div
-              className="grid gap-6"
-              style={{
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              }}
-            >
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
               {articles.map((article) => (
-                <ArticleCard
+                <ArticleCardAdmin
                   key={article.id}
                   article={article}
                   onClick={() => handleEdit(article)}

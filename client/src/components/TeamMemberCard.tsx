@@ -23,21 +23,14 @@ export default function TeamMemberCard({
   const getImageUrl = () => {
     if (!member.imageUrl) return defaultAvatar;
 
-    if (member.imageUrl.startsWith("blob:")) {
-      return member.imageUrl;
-    }
-
+    if (member.imageUrl.startsWith("blob:")) return member.imageUrl;
     if (
       member.imageUrl.startsWith("http://") ||
       member.imageUrl.startsWith("https://")
-    ) {
+    )
       return member.imageUrl;
-    }
-
-    if (member.imageUrl.startsWith("/")) {
+    if (member.imageUrl.startsWith("/"))
       return `${import.meta.env.VITE_API_BASE_URL}${member.imageUrl}`;
-    }
-
     return `${import.meta.env.VITE_API_BASE_URL}/${member.imageUrl}`;
   };
 
@@ -45,31 +38,29 @@ export default function TeamMemberCard({
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const target = e.target as HTMLImageElement;
-    if (target.src !== defaultAvatar) {
-      target.src = defaultAvatar;
-    }
+    if (target.src !== defaultAvatar) target.src = defaultAvatar;
   };
 
   const handleClick = () => {
-    if (!disabled) {
-      onClick?.(member);
-    }
+    if (!disabled) onClick?.(member);
   };
 
   return (
     <div
       onClick={handleClick}
-      className={`bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden text-center transform transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl border border-[#6A8B57]/40 ${
-        disabled ? "opacity-60 pointer-events-none" : ""
-      } p-6`}
+      className={`bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden text-center transform transition-all duration-300 cursor-pointer hover:scale-[1.03] hover:shadow-2xl border border-[#6A8B57]/40 p-6`}
+      style={{ minWidth: "280px" }}
     >
-      <img
-        src={resolvedImageUrl}
-        alt={member.name}
-        onError={handleImageError}
-        loading="lazy"
-        className="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-lg border border-white/30"
-      />
+      <div className="relative w-36 h-36 mx-auto mb-4">
+        <img
+          src={resolvedImageUrl}
+          alt={member.name}
+          onError={handleImageError}
+          loading="lazy"
+          className="w-36 h-36 rounded-full object-cover mx-auto shadow-lg border border-white/30 transform transition-transform duration-300 hover:scale-105"
+        />
+      </div>
+
       <div className="px-2">
         <h3 className="text-lg font-semibold text-[#6A8B57]">{member.name}</h3>
         <p className="text-sm text-[#567544]">{member.position}</p>

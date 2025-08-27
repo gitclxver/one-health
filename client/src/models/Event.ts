@@ -3,7 +3,7 @@ export interface Event {
   title: string;
   description: string;
   imageUrl?: string;
-  eventDate: string | Date;
+  eventDate: string;
   location?: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;

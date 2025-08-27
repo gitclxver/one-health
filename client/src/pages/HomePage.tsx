@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import ArticleCard from "../components/ArticleCard";
 import TeamMemberCard from "../components/TeamMemberCard";
 import EventCard from "../components/EventCard";
@@ -8,11 +8,14 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { useArticlesStore } from "../store/useArticlesStore";
 import { useMembersStore } from "../store/useMembersStore";
 import { useEventStore } from "../store/useEventStore";
+import type { Event } from "../models/Event";
+import type { Member } from "../models/Member";
 
 import heroGlobeImage from "../assets/hero-globe-image.svg";
 import aimImage from "../assets/aim-image.jpg";
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const {
     committeeMembers,
     currentMemberIndex,
@@ -20,6 +23,7 @@ export default function HomePage() {
     error: membersError,
     fetchAndSetMembers,
     rotateCurrentMember,
+    openModal,
   } = useMembersStore();
 
   const {
@@ -51,8 +55,30 @@ export default function HomePage() {
   const currentMember = committeeMembers?.[currentMemberIndex] ?? null;
   const displayArticles = articles.slice(0, 3);
   const displayEvents = upcomingEvents.slice(0, 3);
-  // --- Helper components for conditional rendering ---
 
+  // --- Updated Event Handler ---
+  const handleEventSelect = useCallback(
+    (event: Event) => {
+      navigate("/events"); // navigate to the about page
+      // Open the modal after navigation
+      setTimeout(() => {
+        selectEvent(event);
+      }, 50);
+    },
+    [navigate, selectEvent]
+  );
+
+  const handleMemberClick = useCallback(
+    (member: Member) => {
+      navigate("/about");
+      setTimeout(() => {
+        openModal(member);
+      }, 50);
+    },
+    [navigate, openModal]
+  );
+
+  // --- Sections ---
   const CommitteeSection = () => {
     if (membersLoading) {
       return (
@@ -61,7 +87,6 @@ export default function HomePage() {
         </div>
       );
     }
-
     if (membersError) {
       return (
         <div className="text-red-600 py-8">
@@ -75,14 +100,18 @@ export default function HomePage() {
         </div>
       );
     }
-
     if (!committeeMembers.length) {
       return <p className="text-gray-500 py-8">No Committee Members found</p>;
     }
-
     return (
       <div className="max-w-sm mx-auto w-full">
-        <TeamMemberCard member={currentMember} showDescription={false} />
+        {currentMember && (
+          <TeamMemberCard
+            member={currentMember}
+            showDescription={false}
+            onClick={() => handleMemberClick(currentMember)}
+          />
+        )}
       </div>
     );
   };
@@ -95,7 +124,6 @@ export default function HomePage() {
         </div>
       );
     }
-
     if (articlesError) {
       return (
         <div className="text-center py-8">
@@ -109,7 +137,6 @@ export default function HomePage() {
         </div>
       );
     }
-
     if (!articles.length) {
       return (
         <div className="text-center py-8">
@@ -137,7 +164,6 @@ export default function HomePage() {
         </div>
       );
     }
-
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {displayArticles.map((article) => (
@@ -148,15 +174,14 @@ export default function HomePage() {
   };
 
   const EventsSection = () => {
-    if (eventsLoading) {
+    if (eventsLoading && upcomingEvents.length === 0) {
       return (
         <div className="flex justify-center py-8">
           <LoadingSpinner />
         </div>
       );
     }
-
-    if (eventsError) {
+    if (eventsError && upcomingEvents.length === 0) {
       return (
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{eventsError}</p>
@@ -169,49 +194,44 @@ export default function HomePage() {
         </div>
       );
     }
-
-    if (!upcomingEvents.length) {
+    if (upcomingEvents.length > 0) {
       return (
-        <div className="text-center py-8">
-          <p className="text-gray-500 mb-4">No upcoming events scheduled</p>
-          <Link
-            to="/events"
-            className="inline-flex items-center text-[#6A8B57] hover:text-[#567544] transition-colors text-lg font-semibold"
-          >
-            View All Events
-            <svg
-              className="ml-2 w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {displayEvents.map((event) => (
+            <div
+              key={event.id}
+              onClick={() => handleEventSelect(event)}
+              className="cursor-pointer"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M14 5l7 7m0 0l-7 7m7-7H3"
-              />
-            </svg>
-          </Link>
+              <EventCard event={event} />
+            </div>
+          ))}
         </div>
       );
     }
-
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {displayEvents.map((event) => (
-          <div
-            key={event.id}
-            onClick={() => {
-              selectEvent(event);
-              window.history.pushState({}, "", `/events/${event.id}`);
-            }}
-            className="cursor-pointer"
+      <div className="text-center py-8">
+        <p className="text-gray-500 mb-4">No upcoming events scheduled</p>
+        <Link
+          to="/events"
+          className="inline-flex items-center text-[#6A8B57] hover:text-[#567544] transition-colors text-lg font-semibold"
+        >
+          View All Events
+          <svg
+            className="ml-2 w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <EventCard event={event} />
-          </div>
-        ))}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M14 5l7 7m0 0l-7 7m7-7H3"
+            />
+          </svg>
+        </Link>
       </div>
     );
   };

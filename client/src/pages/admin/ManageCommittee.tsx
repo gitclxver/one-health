@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import type { Member } from "../../models/Member";
 import CommitteeForm from "./committee/CommitteeForm";
 import TeamMemberCard from "../../components/TeamMemberCard";
 import AdminHeader from "../../components/admin/AdminHeader";
 import { useMembersStore } from "../../store/useMembersStore"; // Adjust path
+import type { Member } from "../../models/Member";
 
 export default function ManageCommittee() {
   const {
@@ -12,30 +12,12 @@ export default function ManageCommittee() {
     saving,
     fetchAndSetMembers,
     setEditingMember,
-    saveMember,
     deleteMember,
   } = useMembersStore();
 
   useEffect(() => {
     fetchAndSetMembers();
   }, [fetchAndSetMembers]);
-
-  const handleSave = async (
-    member: Omit<Member, "id" | "joinDate"> & { id?: number },
-    onSaved?: (id: number) => void
-  ) => {
-    try {
-      const saved = await saveMember(member);
-      if (onSaved && saved.id) {
-        onSaved(saved.id);
-      }
-      setEditingMember(null);
-      await fetchAndSetMembers();
-    } catch (error) {
-      console.error("Error saving member", error);
-      alert("Failed to save member. Please try again.");
-    }
-  };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
@@ -74,6 +56,7 @@ export default function ManageCommittee() {
       <AdminHeader />
 
       <main className="min-h-screen max-w-5xl mx-auto px-6 py-10">
+        {/* Header */}
         <section
           className="mb-8 rounded-3xl p-6 text-center"
           style={{
@@ -83,7 +66,7 @@ export default function ManageCommittee() {
             border: "1px solid rgba(255, 255, 255, 0.18)",
           }}
         >
-          <h1 className="text-4xl font-extrabold" style={{ color: "#6A8B57" }}>
+          <h1 className="text-4xl font-extrabold text-[#6A8B57]">
             Manage Committee Members
           </h1>
           <p className="mt-2 text-green-900 font-medium">
@@ -91,6 +74,7 @@ export default function ManageCommittee() {
           </p>
         </section>
 
+        {/* Form Section */}
         <section
           className="mb-12 rounded-3xl p-8"
           style={{
@@ -101,13 +85,12 @@ export default function ManageCommittee() {
           }}
         >
           <CommitteeForm
-            onSave={handleSave}
             editingMember={editingMember}
             onCancelEdit={handleCancelEdit}
-            saving={saving}
           />
         </section>
 
+        {/* Members List */}
         <section
           className="rounded-3xl p-6"
           style={{
@@ -117,8 +100,8 @@ export default function ManageCommittee() {
             border: "1px solid rgba(255, 255, 255, 0.18)",
           }}
         >
-          <h2 className="text-2xl font-bold mb-6" style={{ color: "#4f6d33" }}>
-            Committee Members
+          <h2 className="text-2xl font-bold mb-6 text-[#4f6d33]">
+            Committee Members ({committeeMembers.length})
           </h2>
 
           {sortedMembers.length === 0 ? (
@@ -126,7 +109,7 @@ export default function ManageCommittee() {
               No committee members found.
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
               {sortedMembers.map((member) => (
                 <TeamMemberCard
                   key={member.id}

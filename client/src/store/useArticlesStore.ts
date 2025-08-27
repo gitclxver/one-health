@@ -6,10 +6,10 @@ import {
   createArticle,
   updateArticle,
   deleteArticle as deleteArticleApi,
-  toggleFeatureArticle as toggleFeatureArticleApi,
   publishArticle as publishArticleApi,
-  unpublishArticle as unpublishArticleApi,
+  uploadArticleImage as uploadArticleImageApi,
 } from "../services/admin/adminArticleService";
+import { useNewsletterStore } from "./useNewsletterStore";
 
 interface ArticlesState {
   articles: Article[];
@@ -22,11 +22,10 @@ interface ArticlesState {
   fetchAdminArticles: () => Promise<void>;
   saveArticle: (
     article: Omit<Article, "id" | "createdAt" | "updatedAt"> & { id?: string }
-  ) => Promise<Article | null>;
+  ) => Promise<Article>;
   deleteArticle: (id: string) => Promise<void>;
-
-  toggleFeatureArticle: (id: string, newStatus: boolean) => Promise<boolean>;
-  togglePublishArticle: (id: string, newStatus: boolean) => Promise<boolean>;
+  publishArticle: (id: string) => Promise<void>;
+  uploadArticleImage: (articleId: string, imageFile: File) => Promise<Article>;
 
   clearError: () => void;
   clearCurrentArticle: () => void;
@@ -40,16 +39,15 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
   error: null,
 
   loadArticleById: async (id) => {
-    set({ loading: true, error: null, currentArticle: null });
+    set({ loading: true, error: null });
     try {
       const article = await getArticleById(id);
       set({ currentArticle: article, loading: false });
     } catch (err) {
-      set({
-        loading: false,
-        error: err instanceof Error ? err.message : String(err),
-        currentArticle: null,
-      });
+      const error =
+        err instanceof Error ? err.message : "Failed to load article";
+      set({ error, loading: false, currentArticle: null });
+      throw error;
     }
   },
 
@@ -59,10 +57,10 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
       const articles = await getAdminArticles();
       set({ articles, loading: false });
     } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : String(err),
-        loading: false,
-      });
+      const error =
+        err instanceof Error ? err.message : "Failed to load articles";
+      set({ error, loading: false });
+      throw error;
     }
   },
 
@@ -75,12 +73,13 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
       } else {
         saved = await createArticle(article);
       }
-      // Refresh list after save
       await get().fetchAdminArticles();
       set({ saving: false });
       return saved;
-    } catch (error) {
-      set({ saving: false });
+    } catch (err) {
+      const error =
+        err instanceof Error ? err.message : "Failed to save article";
+      set({ error, saving: false });
       throw error;
     }
   },
@@ -89,52 +88,46 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
     set({ saving: true, error: null });
     try {
       await deleteArticleApi(id);
-      // Refresh list after delete
       await get().fetchAdminArticles();
       set({ saving: false });
-    } catch (error) {
-      set({ saving: false });
+    } catch (err) {
+      const error =
+        err instanceof Error ? err.message : "Failed to delete article";
+      set({ error, saving: false });
       throw error;
     }
   },
 
-  togglePublishArticle: async (id, newStatus) => {
+  publishArticle: async (id) => {
     set({ saving: true, error: null });
     try {
-      if (newStatus) {
-        await publishArticleApi(id);
-      } else {
-        await unpublishArticleApi(id);
-      }
-      // Refresh list after publish toggle
+      await publishArticleApi(id);
+      await useNewsletterStore.getState().sendNewsletter(Number(id));
       await get().fetchAdminArticles();
       set({ saving: false });
-      return true;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      console.error(errorMsg);
-      set({ saving: false });
-      return false;
+      const error =
+        err instanceof Error ? err.message : "Failed to publish article";
+      set({ error, saving: false });
+      throw error;
     }
   },
 
-  toggleFeatureArticle: async (id, newStatus) => {
+  uploadArticleImage: async (articleId, imageFile) => {
     set({ saving: true, error: null });
     try {
-      await toggleFeatureArticleApi(id, newStatus);
-      // Refresh list after feature toggle
+      const updatedArticle = await uploadArticleImageApi(articleId, imageFile);
       await get().fetchAdminArticles();
       set({ saving: false });
-      return true;
+      return updatedArticle;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      console.error(errorMsg);
-      set({ saving: false });
-      return false;
+      const error =
+        err instanceof Error ? err.message : "Failed to upload image";
+      set({ error, saving: false });
+      throw error;
     }
   },
 
   clearError: () => set({ error: null }),
-
   clearCurrentArticle: () => set({ currentArticle: null }),
 }));

@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import type { Event } from "../models/Event";
+import { useEventStore } from "../store/useEventStore";
 import defaultEventImage from "../assets/default-event-image.png";
 import { format } from "date-fns";
 
@@ -8,6 +8,8 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event }: EventCardProps) {
+  const { selectEvent } = useEventStore();
+
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -16,20 +18,14 @@ export default function EventCard({ event }: EventCardProps) {
 
   const getImageUrl = () => {
     if (!event.imageUrl) return defaultEventImage;
-
     if (event.imageUrl.startsWith("blob:")) return event.imageUrl;
-
     if (
       event.imageUrl.startsWith("http://") ||
       event.imageUrl.startsWith("https://")
-    ) {
+    )
       return event.imageUrl;
-    }
-
-    if (event.imageUrl.startsWith("/")) {
+    if (event.imageUrl.startsWith("/"))
       return `${import.meta.env.VITE_API_BASE_URL}${event.imageUrl}`;
-    }
-
     return `${import.meta.env.VITE_API_BASE_URL}/${event.imageUrl}`;
   };
 
@@ -38,15 +34,12 @@ export default function EventCard({ event }: EventCardProps) {
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const target = e.target as HTMLImageElement;
-    if (target.src !== defaultEventImage) {
-      target.src = defaultEventImage;
-    }
+    if (target.src !== defaultEventImage) target.src = defaultEventImage;
   };
 
   return (
-    <Link
-      to={`/events/${event.id}`}
-      className="block no-underline text-inherit h-full bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden transform hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 flex flex-col"
+    <div
+      className="block h-full bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden transform hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 flex flex-col cursor-pointer"
       style={{ border: "1px solid rgba(106, 139, 87, 0.3)" }}
     >
       <img
@@ -117,20 +110,16 @@ export default function EventCard({ event }: EventCardProps) {
             <span className="line-clamp-1">{event.location}</span>
           </div>
         )}
-
-        <p className="text-[#4a5c3a] text-base line-clamp-3 mb-4 flex-grow">
-          {event.description}
-        </p>
-
+        
         <div className="flex justify-center mt-auto">
-          <Link
-            to={`/events/${event.id}`}
+          <button
+            onClick={() => selectEvent(event)}
             className="border border-[#6A8B57] text-[#6A8B57] px-4 py-2 rounded hover:bg-[#6A8B57] hover:text-white transition"
           >
             View Details
-          </Link>
+          </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

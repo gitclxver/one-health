@@ -1,5 +1,6 @@
 import api from "../../utils/api";
 import type { Member } from "../../models/Member";
+import { uploadImageToSupabase } from "../../utils/uploadImage";
 
 export const fetchCommitteeMembers = async (): Promise<Member[]> => {
   const response = await api.get("/members/admin");
@@ -25,47 +26,18 @@ export const deleteCommitteeMember = async (id: number): Promise<void> => {
   await api.delete(`/members/admin/${id}`);
 };
 
-export const uploadTempImage = async (imageFile: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append("image", imageFile); // Backend expects "image" param
-
-  const response = await api.post("/members/admin/upload-temp", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  
-  return response.data;
-};
-
-
-export const finalizeTempImage = async (
-  tempImagePath: string,
-  memberId: number
-): Promise<string> => {
-  const response = await api.post(`/members/admin/finalize-image/${memberId}`, {
-    tempPath: tempImagePath,
-  });
-  
-  return response.data;
-};
-
+// ======== Upload member image (Supabase flow) ========
 export const uploadMemberImage = async (
   memberId: number,
   imageFile: File
-): Promise<{ imageUrl: string }> => {
-  const formData = new FormData();
-  formData.append("image", imageFile);
+): Promise<Member> => {
+  // 1. Upload to Supabase
+  const imageUrl = await uploadImageToSupabase(imageFile, "members");
 
-  const response = await api.post(
-    `/members/admin/upload-image/${memberId}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
-  return response.data.finalPath;
-}
+  // 2. Save URL in backend
+  const response = await api.put(`/members/admin/${memberId}/image`, {
+    imageUrl,
+  });
 
+  return response.data;
+};
