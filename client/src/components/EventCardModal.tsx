@@ -11,14 +11,19 @@ export default function EventModal() {
 
   const getImageUrl = () => {
     if (!event.imageUrl) return defaultEventImage;
+
     if (event.imageUrl.startsWith("blob:")) return event.imageUrl;
+
     if (
       event.imageUrl.startsWith("http://") ||
       event.imageUrl.startsWith("https://")
     )
       return event.imageUrl;
+
+    // only prepend API base for backend relative paths
     if (event.imageUrl.startsWith("/"))
       return `${import.meta.env.VITE_API_BASE_URL}${event.imageUrl}`;
+
     return `${import.meta.env.VITE_API_BASE_URL}/${event.imageUrl}`;
   };
 
@@ -72,7 +77,7 @@ export default function EventModal() {
               <div className="flex-shrink-0 md:w-1/2 h-64 md:h-auto overflow-hidden">
                 <img
                   src={resolvedImageUrl}
-                  alt={event.title}
+                  alt={event.title || "Event"}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                 />
               </div>

@@ -10,14 +10,18 @@ export default function TeamMemberModal() {
 
   const getImageUrl = () => {
     if (!member.imageUrl) return defaultAvatar;
+
     if (member.imageUrl.startsWith("blob:")) return member.imageUrl;
+
     if (
       member.imageUrl.startsWith("http://") ||
       member.imageUrl.startsWith("https://")
     )
       return member.imageUrl;
+
     if (member.imageUrl.startsWith("/"))
       return `${import.meta.env.VITE_API_BASE_URL}${member.imageUrl}`;
+
     return `${import.meta.env.VITE_API_BASE_URL}/${member.imageUrl}`;
   };
 
@@ -49,14 +53,7 @@ export default function TeamMemberModal() {
             leaveTo="opacity-0 scale-95 translate-y-4"
           >
             <Dialog.Panel
-              className="
-                w-full max-w-3xl
-                bg-white/70 backdrop-blur-md border border-[#6A8B57]/30 rounded-2xl
-                shadow-lg
-                flex flex-col md:flex-row
-                overflow-hidden
-                relative
-              "
+              className="w-full max-w-3xl bg-white/70 backdrop-blur-md border border-[#6A8B57]/30 rounded-2xl shadow-lg flex flex-col md:flex-row overflow-hidden relative"
               style={{ minHeight: "24rem" }}
             >
               <button
@@ -71,7 +68,7 @@ export default function TeamMemberModal() {
               <div className="flex-shrink-0 md:w-1/2 h-64 md:h-auto overflow-hidden">
                 <img
                   src={resolvedImageUrl}
-                  alt={member.name}
+                  alt={member.name || "Team member"}
                   className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                 />
               </div>
