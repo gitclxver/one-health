@@ -1,6 +1,6 @@
 import type { Event } from "../models/Event";
 import { useEventStore } from "../store/useEventStore";
-import defaultEventImage from "../assets/default-event-image.png";
+import { DEFAULT_IMAGES } from "../constants/images";
 import { format } from "date-fns";
 
 interface EventCardProps {
@@ -12,12 +12,11 @@ export default function EventCard({ event }: EventCardProps) {
 
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return format(date, "MMM d, yyyy 'at' h:mm a");
+    return format(new Date(dateString), "MMM d, yyyy 'at' h:mm a");
   };
 
   const getImageUrl = () => {
-    if (!event.imageUrl) return defaultEventImage;
+    if (!event.imageUrl) return DEFAULT_IMAGES.EVENT;
     if (event.imageUrl.startsWith("blob:")) return event.imageUrl;
     if (
       event.imageUrl.startsWith("http://") ||
@@ -33,8 +32,7 @@ export default function EventCard({ event }: EventCardProps) {
   const isPastEvent = new Date(event.eventDate) < new Date();
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.target as HTMLImageElement;
-    if (target.src !== defaultEventImage) target.src = defaultEventImage;
+    (e.target as HTMLImageElement).src = DEFAULT_IMAGES.EVENT;
   };
 
   return (
@@ -64,7 +62,6 @@ export default function EventCard({ event }: EventCardProps) {
             {isPastEvent ? "Past" : "Upcoming"}
           </span>
         </div>
-
         {event.eventDate && (
           <div className="flex items-center text-sm text-[#6A8B57]/70 mb-2">
             <svg
@@ -84,7 +81,6 @@ export default function EventCard({ event }: EventCardProps) {
             <span>{formatDate(event.eventDate)}</span>
           </div>
         )}
-
         {event.location && (
           <div className="flex items-center text-sm text-[#6A8B57]/90 mb-3">
             <svg
@@ -110,7 +106,6 @@ export default function EventCard({ event }: EventCardProps) {
             <span className="line-clamp-1">{event.location}</span>
           </div>
         )}
-        
         <div className="flex justify-center mt-auto">
           <button
             onClick={() => selectEvent(event)}

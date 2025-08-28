@@ -1,41 +1,33 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { useEventStore } from "../store/useEventStore";
-import defaultEventImage from "../assets/default-event-image.png";
 import { format } from "date-fns";
+import { DEFAULT_IMAGES } from "../constants/images";
 
 export default function EventModal() {
   const { selectedEvent: event, isModalOpen, closeModal } = useEventStore();
-
   if (!event) return null;
 
   const getImageUrl = () => {
-    if (!event.imageUrl) return defaultEventImage;
-
-    if (event.imageUrl.startsWith("blob:")) return event.imageUrl;
-
-    if (
-      event.imageUrl.startsWith("http://") ||
-      event.imageUrl.startsWith("https://")
-    )
+    if (!event.imageUrl) return DEFAULT_IMAGES.EVENT;
+    if (event.imageUrl.startsWith("blob:") || event.imageUrl.startsWith("http"))
       return event.imageUrl;
-
-    // only prepend API base for backend relative paths
-    if (event.imageUrl.startsWith("/"))
-      return `${import.meta.env.VITE_API_BASE_URL}${event.imageUrl}`;
-
-    return `${import.meta.env.VITE_API_BASE_URL}/${event.imageUrl}`;
+    return event.imageUrl.startsWith("/")
+      ? `${import.meta.env.VITE_API_BASE_URL}${event.imageUrl}`
+      : `${import.meta.env.VITE_API_BASE_URL}/${event.imageUrl}`;
   };
 
   const resolvedImageUrl = getImageUrl();
+  const isPastEvent = new Date(event.eventDate) < new Date();
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    (e.target as HTMLImageElement).src = DEFAULT_IMAGES.EVENT;
+  };
 
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return format(date, "MMMM d, yyyy 'at' h:mm a");
+    return format(new Date(dateString), "MMMM d, yyyy 'at' h:mm a");
   };
-
-  const isPastEvent = new Date(event.eventDate) < new Date();
 
   return (
     <Transition appear show={isModalOpen} as={Fragment}>
@@ -79,6 +71,7 @@ export default function EventModal() {
                   src={resolvedImageUrl}
                   alt={event.title || "Event"}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onError={handleImageError}
                 />
               </div>
 
@@ -150,9 +143,9 @@ export default function EventModal() {
                 </div>
 
                 <div className="text-[#38491f] text-base leading-relaxed mb-6 max-h-60 overflow-y-auto w-full pr-2">
-                  {event.description.split("\n").map((paragraph, i) => (
+                  {event.description.split("\n").map((p, i) => (
                     <p key={i} className="mb-4">
-                      {paragraph}
+                      {p}
                     </p>
                   ))}
                 </div>

@@ -1,7 +1,7 @@
 import type { MouseEvent } from "react";
 import type { Event } from "../models/Event";
-import defaultEventImage from "../assets/default-event-image.png";
 import { format } from "date-fns";
+import { DEFAULT_IMAGES } from "../constants/images";
 
 interface EventCardAdminProps {
   event: Event;
@@ -19,63 +19,46 @@ export default function EventCardAdmin({
   disabled = false,
 }: EventCardAdminProps) {
   const formatDate = (dateString: string | Date) => {
-    const date = new Date(dateString);
-    return format(date, "MMM d, yyyy 'at' h:mm a");
+    return format(new Date(dateString), "MMM d, yyyy 'at' h:mm a");
   };
 
   const getImageUrl = () => {
-    if (!event.imageUrl) return defaultEventImage;
-
-    if (event.imageUrl.startsWith("blob:")) {
+    if (!event.imageUrl) return DEFAULT_IMAGES.EVENT;
+    if (event.imageUrl.startsWith("blob:") || event.imageUrl.startsWith("http"))
       return event.imageUrl;
-    }
-
-    if (
-      event.imageUrl.startsWith("http://") ||
-      event.imageUrl.startsWith("https://")
-    ) {
-      return event.imageUrl;
-    }
-
-    if (event.imageUrl.startsWith("/")) {
+    if (event.imageUrl.startsWith("/"))
       return `${import.meta.env.VITE_API_BASE_URL}${event.imageUrl}`;
-    }
-
     return `${import.meta.env.VITE_API_BASE_URL}/${event.imageUrl}`;
   };
 
   const resolvedImageUrl = getImageUrl();
+  const isPastEvent = new Date(event.eventDate) < new Date();
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.target as HTMLImageElement;
-    if (target.src !== defaultEventImage) {
-      target.src = defaultEventImage;
-    }
+    (e.target as HTMLImageElement).src = DEFAULT_IMAGES.EVENT;
   };
 
   const handleEdit = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (disabled || !onEdit) return;
-    onEdit();
+    if (!disabled && onEdit) onEdit();
   };
 
   const handleDelete = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (disabled || !onDelete) return;
-    if (window.confirm(`Are you sure you want to delete "${event.title}"?`)) {
+    if (
+      !disabled &&
+      onDelete &&
+      window.confirm(`Are you sure you want to delete "${event.title}"?`)
+    ) {
       onDelete();
     }
   };
 
   const handleClick = () => {
-    if (!disabled && onClick) {
-      onClick();
-    }
+    if (!disabled && onClick) onClick();
   };
-
-  const isPastEvent = new Date(event.eventDate) < new Date();
 
   return (
     <div
@@ -109,23 +92,25 @@ export default function EventCardAdmin({
           </span>
         </div>
 
-        <div className="flex items-center text-sm text-[#6A8B57]/70 mb-3">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 mr-1"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          <span>{formatDate(event.eventDate)}</span>
-        </div>
+        {event.eventDate && (
+          <div className="flex items-center text-sm text-[#6A8B57]/70 mb-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span>{formatDate(event.eventDate)}</span>
+          </div>
+        )}
 
         {event.location && (
           <div className="flex items-center text-sm text-[#6A8B57]/70 mb-4">
@@ -160,16 +145,16 @@ export default function EventCardAdmin({
 
       <div className="p-4 border-t border-[#6A8B57]/20 flex justify-center gap-3">
         <button
-          className="px-4 py-1 bg-[#6A8B57] text-white text-sm rounded hover:bg-[#567544] disabled:bg-gray-400 disabled:cursor-not-allowed shadow"
           onClick={handleEdit}
           disabled={disabled}
+          className="px-4 py-1 bg-[#6A8B57] text-white text-sm rounded hover:bg-[#567544] shadow"
         >
           Edit
         </button>
         <button
-          className="px-4 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed shadow"
           onClick={handleDelete}
           disabled={disabled}
+          className="px-4 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 shadow"
         >
           Delete
         </button>

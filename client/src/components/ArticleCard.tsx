@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Article } from "../models/Article";
-import defaultArticleImage from "../assets/default-article-image.png";
+import { DEFAULT_IMAGES } from "../constants/images";
 
 interface ArticleCardProps {
   article: Article & { excerpt?: string };
@@ -9,8 +9,7 @@ interface ArticleCardProps {
 export default function ArticleCard({ article }: ArticleCardProps) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -18,23 +17,15 @@ export default function ArticleCard({ article }: ArticleCardProps) {
   };
 
   const getImageUrl = () => {
-    if (!article.imageUrl) return defaultArticleImage;
-
-    if (article.imageUrl.startsWith("blob:")) {
-      return article.imageUrl;
-    }
-
+    if (!article.imageUrl) return DEFAULT_IMAGES.ARTICLE;
+    if (article.imageUrl.startsWith("blob:")) return article.imageUrl;
     if (
       article.imageUrl.startsWith("http://") ||
       article.imageUrl.startsWith("https://")
-    ) {
+    )
       return article.imageUrl;
-    }
-
-    if (article.imageUrl.startsWith("/")) {
+    if (article.imageUrl.startsWith("/"))
       return `${import.meta.env.VITE_API_BASE_URL}${article.imageUrl}`;
-    }
-
     return `${import.meta.env.VITE_API_BASE_URL}/${article.imageUrl}`;
   };
 
@@ -42,9 +33,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const target = e.target as HTMLImageElement;
-    if (target.src !== defaultArticleImage) {
-      target.src = defaultArticleImage;
-    }
+    target.src = DEFAULT_IMAGES.ARTICLE;
   };
 
   return (
@@ -69,15 +58,12 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             {formatDate(article.publishedAt || article.createdAt)}
           </span>
         </div>
-
         <p className="text-sm text-[#6A8B57]/90 mb-3">
           By One Health Student Society
         </p>
-
         <p className="text-[#4a5c3a] text-base line-clamp-3 mb-4 flex-grow">
           {article.excerpt ?? article.description}
         </p>
-
         <div className="flex justify-center mt-auto">
           <Link
             to={`/articles/${article.id}`}

@@ -1,5 +1,5 @@
 import type { Member } from "../models/Member";
-import defaultAvatar from "../assets/default-avatar.png";
+import { DEFAULT_IMAGES } from "../constants/images";
 
 interface TeamMemberCardProps {
   member: Member;
@@ -21,12 +21,10 @@ export default function TeamMemberCard({
   disabled = false,
 }: TeamMemberCardProps) {
   const getImageUrl = () => {
-    if (!member.imageUrl) return defaultAvatar;
-
-    if (member.imageUrl.startsWith("blob:")) return member.imageUrl;
+    if (!member.imageUrl) return DEFAULT_IMAGES.AVATAR;
     if (
-      member.imageUrl.startsWith("http://") ||
-      member.imageUrl.startsWith("https://")
+      member.imageUrl.startsWith("blob:") ||
+      member.imageUrl.startsWith("http")
     )
       return member.imageUrl;
     if (member.imageUrl.startsWith("/"))
@@ -37,8 +35,7 @@ export default function TeamMemberCard({
   const resolvedImageUrl = getImageUrl();
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.target as HTMLImageElement;
-    if (target.src !== defaultAvatar) target.src = defaultAvatar;
+    (e.target as HTMLImageElement).src = DEFAULT_IMAGES.AVATAR;
   };
 
   const handleClick = () => {
@@ -74,22 +71,22 @@ export default function TeamMemberCard({
       {showActions && (
         <div className="mt-4 flex justify-center gap-3">
           <button
-            className="px-4 py-1 bg-[#6A8B57] text-white text-sm rounded hover:bg-[#567544] disabled:bg-gray-400 disabled:cursor-not-allowed shadow"
             onClick={(e) => {
               e.stopPropagation();
               onEdit?.();
             }}
             disabled={disabled}
+            className="px-4 py-1 bg-[#6A8B57] text-white text-sm rounded hover:bg-[#567544] shadow"
           >
             Edit
           </button>
           <button
-            className="px-4 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed shadow"
             onClick={(e) => {
               e.stopPropagation();
               onDelete?.();
             }}
             disabled={disabled}
+            className="px-4 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 shadow"
           >
             Delete
           </button>

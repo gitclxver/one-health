@@ -1,31 +1,28 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { useMembersStore } from "../store/useMembersStore";
-import defaultAvatar from "../assets/default-avatar.png";
+import { DEFAULT_IMAGES } from "../constants/images";
 
 export default function TeamMemberModal() {
   const { selectedMember: member, isModalOpen, closeModal } = useMembersStore();
-
   if (!member) return null;
 
   const getImageUrl = () => {
-    if (!member.imageUrl) return defaultAvatar;
-
-    if (member.imageUrl.startsWith("blob:")) return member.imageUrl;
-
+    if (!member.imageUrl) return DEFAULT_IMAGES.AVATAR;
     if (
-      member.imageUrl.startsWith("http://") ||
-      member.imageUrl.startsWith("https://")
+      member.imageUrl.startsWith("blob:") ||
+      member.imageUrl.startsWith("http")
     )
       return member.imageUrl;
-
-    if (member.imageUrl.startsWith("/"))
-      return `${import.meta.env.VITE_API_BASE_URL}${member.imageUrl}`;
-
-    return `${import.meta.env.VITE_API_BASE_URL}/${member.imageUrl}`;
+    return member.imageUrl.startsWith("/")
+      ? `${import.meta.env.VITE_API_BASE_URL}${member.imageUrl}`
+      : `${import.meta.env.VITE_API_BASE_URL}/${member.imageUrl}`;
   };
 
   const resolvedImageUrl = getImageUrl();
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    (e.target as HTMLImageElement).src = DEFAULT_IMAGES.AVATAR;
+  };
 
   return (
     <Transition appear show={isModalOpen} as={Fragment}>
@@ -64,16 +61,15 @@ export default function TeamMemberModal() {
                 &times;
               </button>
 
-              {/* Left side: Image */}
               <div className="flex-shrink-0 md:w-1/2 h-64 md:h-auto overflow-hidden">
                 <img
                   src={resolvedImageUrl}
                   alt={member.name || "Team member"}
                   className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                  onError={handleImageError}
                 />
               </div>
 
-              {/* Right side: Content */}
               <div className="md:w-1/2 flex flex-col justify-center items-center text-center p-6">
                 <Dialog.Title
                   as="h3"
@@ -84,10 +80,11 @@ export default function TeamMemberModal() {
                 <p className="text-[#29331e] font-medium text-lg mb-4">
                   {member.position}
                 </p>
+
                 <div className="text-[#38491f] text-base leading-relaxed max-h-60 overflow-y-auto w-full px-1">
-                  {member.bio.split("\n").map((paragraph, i) => (
+                  {member.bio.split("\n").map((p, i) => (
                     <p key={i} className="mb-4">
-                      {paragraph}
+                      {p}
                     </p>
                   ))}
                 </div>
