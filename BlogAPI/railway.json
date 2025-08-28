@@ -7,21 +7,27 @@
   "deploy": {
     "startCommand": "java -jar build/libs/*.jar",
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
-  },
-  "headers": {
-    "/api/v1/newsletter/subscribe": {
-      "Access-Control-Allow-Origin": "https://www.nustonehealthsociety.org",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Origin",
-      "Access-Control-Allow-Credentials": "true",
-      "Access-Control-Max-Age": "3600"
-    },
-    "/api/v1/**": {
-      "Access-Control-Allow-Origin": "https://www.nustonehealthsociety.org",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Origin",
-      "Access-Control-Allow-Credentials": "true"
+    "restartPolicyMaxRetries": 10,
+    "headers": {
+      "/api/v1/newsletter/subscribe": {
+        "Access-Control-Allow-Origin": "https://www.nustonehealthsociety.org",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Origin, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "3600"
+      },
+      "/api/v1/newsletter/**": {
+        "Access-Control-Allow-Origin": "https://www.nustonehealthsociety.org",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Origin, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "/api/v1/**": {
+        "Access-Control-Allow-Origin": "https://www.nustonehealthsociety.org",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, Origin, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true"
+      }
     }
   }
 }
