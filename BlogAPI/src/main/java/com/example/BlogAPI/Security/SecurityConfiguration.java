@@ -68,6 +68,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/articles/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/subscribe").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/newsletter/subscribe").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/unsubscribe").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/newsletter/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/members/**").permitAll()
@@ -86,20 +87,12 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "https://www.nustonehealthsociety.org",
-            "https://nustonehealthsociety.org",
-            "https://one-health-production-a10d.up.railway.app"
-        ));
-        config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"
-        ));
+        config.addAllowedOriginPattern("*");
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
-
+    
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
