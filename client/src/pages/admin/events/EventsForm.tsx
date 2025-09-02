@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { Event } from "../../../models/Event";
 import { useEventStore } from "../../../store/useEventStore";
-import { Calendar } from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 
 interface Props {
   event?: Event | null;
@@ -18,6 +18,7 @@ export default function EventsForm({
 }: Props) {
   const [title, setTitle] = useState("");
   const [eventDate, setEventDate] = useState(""); // formatted YYYY/MM/DD
+  const [eventTime, setEventTime] = useState(""); // formatted HH:mm
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -32,6 +33,7 @@ export default function EventsForm({
   const clearForm = () => {
     setTitle("");
     setEventDate("");
+    setEventTime("");
     setLocation("");
     setDescription("");
     setImageUrl("");
@@ -50,9 +52,10 @@ export default function EventsForm({
   useEffect(() => {
     if (event) {
       setTitle(event.title || "");
-      // Ensure stored eventDate is formatted consistently
       if (event.eventDate) {
-        setEventDate(formatDateString(event.eventDate));
+        const dt = new Date(event.eventDate);
+        setEventDate(formatDateString(dt));
+        setEventTime(formatTimeString(dt));
       }
       setLocation(event.location || "");
       setDescription(event.description || "");
@@ -91,18 +94,23 @@ export default function EventsForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim() || !eventDate.trim() || !location.trim()) {
-      alert("Title, Date, and Location are required");
+    if (
+      !title.trim() ||
+      !eventDate.trim() ||
+      !location.trim() ||
+      !eventTime.trim()
+    ) {
+      alert("Title, Date, Time, and Location are required");
       return;
     }
 
-    // 🔹 Normalize date for backend (yyyy-mm-dd)
     const normalizedDate = toNativeDateValue(eventDate.trim());
+    const isoDateTime = `${normalizedDate}T${eventTime}:00`; // yyyy-MM-ddTHH:mm:ss
 
     const eventData: Omit<Event, "id"> & { id?: number } = {
       id: event?.id,
       title: title.trim(),
-      eventDate: normalizedDate, // send ISO format to backend
+      eventDate: isoDateTime,
       location: location.trim(),
       description: description.trim(),
       imageUrl,
@@ -111,7 +119,6 @@ export default function EventsForm({
     try {
       const savedEvent = await saveEvent(eventData);
 
-      // Upload image after event is created/updated
       if (previewUrl && fileInputRef.current?.files?.[0] && savedEvent.id) {
         const file = fileInputRef.current.files[0];
         await uploadEventImage(savedEvent.id, file);
@@ -129,43 +136,39 @@ export default function EventsForm({
 
   const resolvedImageUrl = previewUrl || imageUrl || "";
 
-  // 🔹 Formatter: enforce YYYY/MM/DD while typing
+  // Date input formatting
   const handleDateInput = (value: string) => {
     let cleaned = value.replace(/\D/g, "");
     if (cleaned.length > 8) cleaned = cleaned.slice(0, 8);
 
     let formatted = cleaned;
-    if (cleaned.length > 4) {
+    if (cleaned.length > 4)
       formatted = cleaned.slice(0, 4) + "/" + cleaned.slice(4);
-    }
-    if (cleaned.length > 6) {
+    if (cleaned.length > 6)
       formatted = formatted.slice(0, 7) + "/" + formatted.slice(7);
-    }
 
     setEventDate(formatted);
   };
 
-  // 🔹 Convert yyyy-mm-dd → yyyy/mm/dd (with zero padding)
-  const formatDateString = (value: string) => {
-    if (!value) return "";
-    if (value.includes("-")) {
-      const [year, month, day] = value.split("-");
-      const mm = month.padStart(2, "0");
-      const dd = day.padStart(2, "0");
-      return `${year}/${mm}/${dd}`;
-    }
-    return value;
+  const formatDateString = (value: Date | string) => {
+    const d = typeof value === "string" ? new Date(value) : value;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}/${month}/${day}`;
   };
 
-  // 🔹 Convert yyyy/mm/dd → yyyy-mm-dd (with zero padding)
+  const formatTimeString = (value: Date) => {
+    const hours = String(value.getHours()).padStart(2, "0");
+    const minutes = String(value.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
   const toNativeDateValue = (value: string) => {
-    if (!value) return "";
     const parts = value.split("/");
     if (parts.length !== 3) return "";
     const [year, month, day] = parts;
-    const mm = month.padStart(2, "0");
-    const dd = day.padStart(2, "0");
-    return `${year}-${mm}-${dd}`;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   };
 
   return (
@@ -224,63 +227,43 @@ export default function EventsForm({
 
       {/* Fields */}
       <div className="space-y-6">
-        <div>
-          <input
-            className="w-full border border-[#6A8B57] p-3 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A8B57] transition"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Event Title"
-            required
-            disabled={saving}
-            maxLength={100}
-          />
-        </div>
+        {/* Title */}
+        <input
+          className="w-full border border-[#6A8B57] p-3 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A8B57] transition"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Event Title"
+          required
+          disabled={saving}
+          maxLength={100}
+        />
 
-        {/* 🔹 Date Field with Picker + Formatting */}
+        {/* Date */}
         <div className="relative">
-          {/* Floating label */}
-          <label
-            htmlFor="date-input"
-            className={`absolute left-3 transition-all pointer-events-none
-      ${
-        eventDate
-          ? "text-xs -top-2 text-[#4f6d33] bg-white px-1 rounded"
-          : "text-gray-400 top-3"
-      }`}
-          >
+          <label className="absolute left-3 top-0 text-xs text-[#4f6d33] bg-white px-1 rounded">
             YYYY/MM/DD
           </label>
-
-          {/* Text field (manual typing with formatting) */}
           <input
-            id="date-input"
             type="text"
             inputMode="numeric"
-            className="w-full border border-[#6A8B57] p-3 pr-12 rounded-lg text-gray-900 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-[#6A8B57] transition tracking-wider font-mono"
+            className="w-full border border-[#6A8B57] p-3 pr-12 rounded-lg text-gray-900 font-mono"
             value={eventDate}
             onChange={(e) => handleDateInput(e.target.value)}
             required
             disabled={saving}
-            maxLength={10}
           />
-
-          {/* Calendar Icon Button */}
           <button
             type="button"
-            className="absolute inset-y-0 right-0 px-3 flex items-center text-[#6A8B57] hover:text-[#4f6d33]"
+            className="absolute inset-y-0 right-0 px-3 flex items-center text-[#6A8B57]"
             onClick={() => {
               const input = document.getElementById(
                 "hidden-date-input"
               ) as HTMLInputElement | null;
-              input?.showPicker?.(); // modern browsers
-              input?.focus(); // fallback
+              input?.showPicker?.();
             }}
-            disabled={saving}
           >
             <Calendar size={20} />
           </button>
-
-          {/* Hidden native date picker */}
           <input
             id="hidden-date-input"
             type="date"
@@ -292,18 +275,36 @@ export default function EventsForm({
           />
         </div>
 
-        <div>
+        {/* Time */}
+        <div className="relative">
+          <label className="absolute left-3 top-0 text-xs text-[#4f6d33] bg-white px-1 rounded">
+            HH:MM
+          </label>
           <input
-            className="w-full border border-[#6A8B57] p-3 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A8B57] transition"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Event Location"
+            type="time"
+            className="w-full border border-[#6A8B57] p-3 pr-12 rounded-lg text-gray-900 font-mono"
+            value={eventTime}
+            onChange={(e) => setEventTime(e.target.value)}
             required
             disabled={saving}
-            maxLength={100}
           />
+          <div className="absolute inset-y-0 right-0 px-3 flex items-center text-[#6A8B57]">
+            <Clock size={20} />
+          </div>
         </div>
 
+        {/* Location */}
+        <input
+          className="w-full border border-[#6A8B57] p-3 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6A8B57] transition"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Event Location"
+          required
+          disabled={saving}
+          maxLength={100}
+        />
+
+        {/* Description */}
         <div>
           <div className="flex justify-end mb-1 pr-2 text-xs text-[#4f6d33] select-none">
             {description.length} / {DESCRIPTION_LIMIT}

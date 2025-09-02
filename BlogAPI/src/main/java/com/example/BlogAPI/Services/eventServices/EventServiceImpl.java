@@ -1,6 +1,6 @@
 package com.example.BlogAPI.Services.eventServices;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -24,12 +24,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
 public List<Event> getUpcomingEvents() {
-    return eventRepository.findByEventDateAfterOrderByEventDateAsc(LocalDate.now());
+    return eventRepository.findByEventDateAfterOrderByEventDateAsc(LocalDateTime.now());
 }
 
 @Override
 public List<Event> getPastEvents() {
-    return eventRepository.findByEventDateBeforeOrderByEventDateDesc(LocalDate.now());
+    return eventRepository.findByEventDateBeforeOrderByEventDateDesc(LocalDateTime.now());
 }
 
     @Override

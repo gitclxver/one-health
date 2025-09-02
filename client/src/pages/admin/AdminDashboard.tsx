@@ -95,7 +95,6 @@ export default function AdminDashboard() {
     (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()
   );
 
-  // ---- Unified per-tab state for loader/error/empty ----
   const isLoading =
     (activeTab === "articles" && articlesLoading) ||
     (activeTab === "committee" && membersLoading) ||
@@ -106,13 +105,15 @@ export default function AdminDashboard() {
     (activeTab === "committee" && membersError) ||
     (activeTab === "events" && eventsError) ||
     null;
-    
+
   const retryFn =
     activeTab === "articles"
       ? fetchAdminArticles
       : activeTab === "committee"
       ? fetchAndSetMembers
       : fetchAllEvents;
+
+  const CARD_HEIGHT = "400px";
 
   return (
     <>
@@ -125,27 +126,27 @@ export default function AdminDashboard() {
 
       <AdminHeader />
 
-      <main className="min-h-screen w-full max-w-7xl mx-auto px-8 py-12 space-y-8">
+      <main className="min-h-screen w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Header Section */}
-        <section className="rounded-3xl p-8 text-center bg-white/25 backdrop-blur-md border border-white/20">
-          <h1 className="text-4xl font-extrabold text-[#6A8B57]">
+        <section className="rounded-3xl p-6 sm:p-8 text-center bg-white/25 backdrop-blur-md border border-white/20">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#6A8B57]">
             Admin Dashboard
           </h1>
-          <p className="mt-4 text-lg text-green-900 font-medium">
+          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-green-900 font-medium">
             Manage Articles, Committee Members, and Events
           </p>
         </section>
 
         {/* Tabs Section */}
-        <section className="rounded-3xl p-8 bg-white/25 backdrop-blur-md border border-white/20">
-          <div className="flex flex-col space-y-6 md:flex-row md:items-center md:justify-between md:space-y-0">
+        <section className="rounded-3xl p-4 sm:p-6 bg-white/25 backdrop-blur-md border border-white/20">
+          <div className="flex flex-col space-y-4 sm:space-y-6 md:flex-row md:items-center md:justify-between md:space-y-0">
             <div className="border-b border-gray-200 w-full md:w-auto">
-              <nav className="-mb-px flex space-x-8">
+              <nav className="-mb-px flex justify-center md:justify-start space-x-4 sm:space-x-8">
                 {(["articles", "committee", "events"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
+                    className={`whitespace-nowrap py-3 px-3 sm:py-4 sm:px-4 border-b-2 font-medium text-xs sm:text-sm ${
                       activeTab === tab
                         ? "border-blue-500 text-blue-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -162,7 +163,7 @@ export default function AdminDashboard() {
             </div>
             <button
               onClick={refreshData}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium mt-4 md:mt-0"
             >
               Refresh Data
             </button>
@@ -170,8 +171,8 @@ export default function AdminDashboard() {
         </section>
 
         {/* Content Section */}
-        <section className="relative rounded-3xl p-8 bg-white/25 backdrop-blur-md border border-white/20">
-          {/* Loader Overlay (keeps content visible) */}
+        <section className="relative rounded-3xl p-4 sm:p-6 bg-white/25 backdrop-blur-md border border-white/20 min-h-[400px]">
+          {/* Loader Overlay */}
           <div
             className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
               isLoading ? "opacity-100" : "opacity-0"
@@ -184,11 +185,11 @@ export default function AdminDashboard() {
 
           {/* Errors */}
           {currentError ? (
-            <div className="text-center py-16 space-y-4">
-              <p className="text-xl text-red-600">{currentError}</p>
+            <div className="text-center py-12 sm:py-16 space-y-4">
+              <p className="text-lg sm:text-xl text-red-600">{currentError}</p>
               <button
                 onClick={retryFn}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium"
               >
                 Retry
               </button>
@@ -199,28 +200,33 @@ export default function AdminDashboard() {
               {activeTab === "articles" && (
                 <>
                   {articles.length === 0 ? (
-                    <div className="text-center py-16 space-y-6">
-                      <p className="text-xl text-gray-700">
+                    <div className="text-center py-12 sm:py-16 space-y-4 sm:space-y-6">
+                      <p className="text-lg sm:text-xl text-gray-700">
                         No articles found.
                       </p>
                       <Link
                         to="/admin/articles"
-                        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
+                        className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-lg font-medium"
                       >
                         Create Your First Article
                       </Link>
                     </div>
                   ) : (
-                    <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
                       {articles.map((article) => (
-                        <ArticleCard
+                        <div
                           key={article.id}
-                          article={article}
-                          onClick={() => navigate("/admin/articles")}
-                          onEdit={() => navigate("/admin/articles")}
-                          onDelete={() => handleDeleteArticle(article.id)}
-                          disabled={articlesSaving}
-                        />
+                          className="w-full max-w-[280px]"
+                          style={{ height: CARD_HEIGHT }}
+                        >
+                          <ArticleCard
+                            article={article}
+                            onClick={() => navigate("/admin/articles")}
+                            onEdit={() => navigate("/admin/articles")}
+                            onDelete={() => handleDeleteArticle(article.id)}
+                            disabled={articlesSaving}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
@@ -231,32 +237,37 @@ export default function AdminDashboard() {
               {activeTab === "committee" && (
                 <>
                   {committeeMembers.length === 0 ? (
-                    <div className="text-center py-16 space-y-6">
-                      <p className="text-xl text-gray-700">
+                    <div className="text-center py-12 sm:py-16 space-y-4 sm:space-y-6">
+                      <p className="text-lg sm:text-xl text-gray-700">
                         No committee members found.
                       </p>
                       <Link
                         to="/admin/committee"
-                        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
+                        className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-lg font-medium"
                       >
                         Add First Committee Member
                       </Link>
                     </div>
                   ) : (
-                    <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
                       {[...committeeMembers]
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map((member) => (
-                          <TeamMemberCard
+                          <div
                             key={member.id}
-                            member={member}
-                            showDescription={true}
-                            onClick={() => navigate("/admin/committee")}
-                            onEdit={() => navigate("/admin/committee")}
-                            onDelete={() => handleDeleteMember(member.id)}
-                            showActions
-                            disabled={membersSaving}
-                          />
+                            className="w-full max-w-[280px]"
+                            style={{ height: CARD_HEIGHT }}
+                          >
+                            <TeamMemberCard
+                              member={member}
+                              showDescription={true}
+                              onClick={() => navigate("/admin/committee")}
+                              onEdit={() => navigate("/admin/committee")}
+                              onDelete={() => handleDeleteMember(member.id)}
+                              showActions
+                              disabled={membersSaving}
+                            />
+                          </div>
                         ))}
                     </div>
                   )}
@@ -267,26 +278,33 @@ export default function AdminDashboard() {
               {activeTab === "events" && (
                 <>
                   {sortedEvents.length === 0 ? (
-                    <div className="text-center py-16 space-y-6">
-                      <p className="text-xl text-gray-700">No events found.</p>
+                    <div className="text-center py-12 sm:py-16 space-y-4 sm:space-y-6">
+                      <p className="text-lg sm:text-xl text-gray-700">
+                        No events found.
+                      </p>
                       <Link
                         to="/admin/events"
-                        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-lg font-medium"
+                        className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-lg font-medium"
                       >
                         Add First Event
                       </Link>
                     </div>
                   ) : (
-                    <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
                       {sortedEvents.map((event) => (
-                        <EventCardAdmin
+                        <div
                           key={event.id}
-                          event={event}
-                          onClick={() => navigate("/admin/events")}
-                          onEdit={() => navigate("/admin/events")}
-                          onDelete={() => handleDeleteEvent(event.id)}
-                          disabled={eventsSaving}
-                        />
+                          className="w-full max-w-[280px]"
+                          style={{ height: CARD_HEIGHT }}
+                        >
+                          <EventCardAdmin
+                            event={event}
+                            onClick={() => navigate("/admin/events")}
+                            onEdit={() => navigate("/admin/events")}
+                            onDelete={() => handleDeleteEvent(event.id)}
+                            disabled={eventsSaving}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
