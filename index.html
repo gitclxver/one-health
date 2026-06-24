@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Health Student Society</title>
+    
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Alpine.js for interactive state UI & Multi-route SPA Mocking -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- GSAP for Advanced Scroll-Based Sequences & Timelines -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Google Fonts: Plus Jakarta Sans (demo1) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --sage: #CCD5AE;
+            --aqua: #B3DEE2;
+            --sage-dark: #8a9478;
+            --aqua-dark: #6aabaf;
+            --text-primary: #334155;
+            --text-muted: #475569;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            font-size: 17px;
+            line-height: 1.65;
+            color: var(--text-primary);
+        }
+
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6b7560 0%, #4a8a92 50%, #7aa8ae 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--aqua);
+            border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--sage-dark);
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .carousel-track {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .carousel-slide {
+            scroll-snap-align: center;
+        }
+
+        @media (max-width: 767px) {
+            body {
+                font-size: 16px;
+            }
+            #mainHeader {
+                top: calc(0.75rem + env(safe-area-inset-top, 0px));
+            }
+            #pillars-dots button,
+            #exco-dots button {
+                min-width: 2.75rem;
+                min-height: 2.75rem;
+                padding: 0.625rem;
+            }
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .footer-watermark {
+            height: clamp(4.5rem, 12vw, 8rem);
+        }
+        .footer-watermark-text {
+            font-size: clamp(3.25rem, 14vw, 11rem);
+            transform: translateY(38%);
+        }
+    </style>
+</head>
+<body class="bg-[#f7f9f4] text-slate-700 overflow-x-hidden selection:bg-[#B3DEE2] selection:text-slate-800" 
+      x-data="{ currentRoute: 'home', mobileMenu: false }"
+      x-effect="document.body.style.overflow = mobileMenu ? 'hidden' : ''">
+
+    <!-- STATIC AMBIENT BLUR BACKDROP SYSTEM (Persists across entire page context) -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#B3DEE2]/45 rounded-full blur-[140px]"></div>
+        <div class="absolute top-[30%] right-[-10%] w-[60vw] h-[60vw] bg-[#CCD5AE]/40 rounded-full blur-[160px]"></div>
+        <div class="absolute bottom-[-10%] left-[20%] w-[45vw] h-[45vw] bg-[#B3DEE2]/35 rounded-full blur-[130px]"></div>
+        <div class="absolute top-[60%] left-[-5%] w-[35vw] h-[35vw] bg-[#CCD5AE]/35 rounded-full blur-[120px]"></div>
+    </div>
+
+    <!-- PROGRESS TIMELINE BAR -->
+    <div id="scrollProgress" class="fixed top-0 left-0 h-[4px] bg-gradient-to-r from-[#CCD5AE] to-[#B3DEE2] z-[70] w-0 transition-all duration-100"></div>
+
+    <!-- CONSOLE-STYLE FLOATING INTEGRATED NAV HEADER -->
+    <header class="fixed top-3 md:top-6 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] md:w-[calc(100%-48px)] max-w-7xl z-50 transition-all duration-500" id="mainHeader">
+        <div class="bg-white/40 backdrop-blur-xl border border-white/40 rounded-full px-4 md:px-8 h-16 md:h-20 flex items-center justify-between shadow-sm relative group/header hover:bg-white/60 hover:border-slate-200/50 hover:shadow-xl hover:shadow-slate-100/40 transition-all duration-500">
+            
+            <a href="#" @click.prevent="currentRoute = 'home'; window.scrollTo(0,0);" class="flex items-center gap-2 md:gap-3 font-bold text-lg md:text-xl tracking-tight text-slate-800 group min-w-0">
+                <div class="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center rounded-lg bg-[#8a9478] text-white transition-transform duration-500 group-hover:rotate-90">
+                    <i data-lucide="globe" class="w-4 h-4 text-[#CCD5AE]"></i>
+                </div>
+                <span class="font-display truncate">ONE<span class="text-[#6aabaf] font-normal">/</span>HEALTH</span>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-2 relative bg-[#CCD5AE]/20 p-1.5 rounded-full border border-[#CCD5AE]/40">
+                <a href="#about" @click="currentRoute = 'home'" :class="currentRoute === 'home' ? 'text-slate-800 bg-white shadow-sm' : 'text-slate-600 hover:text-[#6aabaf]'" class="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300">About</a>
+                <a href="#exco" @click="currentRoute = 'home'" class="px-5 py-2.5 rounded-full text-sm font-medium text-slate-600 hover:text-[#6aabaf] transition-all duration-300">Leadership</a>
+                <a href="#" @click.prevent="currentRoute = 'articles'; window.scrollTo(0,0);" :class="currentRoute === 'articles' ? 'text-slate-800 bg-white shadow-sm' : 'text-slate-600 hover:text-[#6aabaf]'" class="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300">Insights</a>
+            </nav>
+
+            <div class="hidden md:flex items-center">
+                <a href="#join" @click="currentRoute = 'home'" class="bg-slate-700 text-white px-7 h-12 flex items-center justify-center rounded-full text-sm font-semibold shadow-md shadow-slate-700/15 transition-colors duration-300 hover:bg-slate-600">
+                    <span class="flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        Join Society
+                    </span>
+                </a>
+            </div>
+
+            <button @click="mobileMenu = !mobileMenu" class="md:hidden text-slate-700 p-2.5 -mr-1 focus:outline-none" aria-label="Toggle menu">
+                <i data-lucide="menu" class="w-6 h-6" x-show="!mobileMenu"></i>
+                <i data-lucide="x" class="w-6 h-6" x-show="mobileMenu" x-cloak></i>
+            </button>
+        </div>
+
+        <div x-show="mobileMenu" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             @click.away="mobileMenu = false" 
+             class="absolute top-[4.25rem] left-0 w-full bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-3xl p-4 shadow-2xl flex flex-col gap-2 md:hidden max-h-[calc(100dvh-5.5rem)] overflow-y-auto">
+            <a href="#about" @click="currentRoute = 'home'; mobileMenu = false;" class="px-4 py-3 rounded-xl bg-[#B3DEE2]/40 font-semibold text-slate-800 text-base">About</a>
+            <a href="#exco" @click="currentRoute = 'home'; mobileMenu = false;" class="px-4 py-3 rounded-xl hover:bg-[#B3DEE2]/30 font-semibold text-slate-700 text-base">Leadership</a>
+            <a href="#" @click.prevent="currentRoute = 'articles'; mobileMenu = false; window.scrollTo(0,0);" class="px-4 py-3 rounded-xl hover:bg-[#B3DEE2]/30 font-semibold text-slate-700 text-base">Insights</a>
+            <a href="#join" @click="currentRoute = 'home'; mobileMenu = false;" class="w-full text-center bg-slate-700 text-white py-3.5 rounded-xl font-semibold text-sm mt-2">Join Society</a>
+        </div>
+    </header>
+
+    <!-- MAIN CONTEXT WRAPPER -->
+    <main class="relative z-10">
+
+        <!-- ROUTE 1: PRIMARY APPLICATION CORE (HOME) -->
+        <div x-show="currentRoute === 'home'" x-transition:enter="transition ease-out duration-500" class="w-full">
+            
+            <!-- HERO SCROLL SEQUENCE -->
+            <section id="hero-trigger-context" class="relative bg-transparent w-full">
+                <div id="hero-pin-wrapper" class="relative w-full h-[100dvh] min-h-[600px] md:min-h-0 md:h-screen overflow-hidden flex items-center justify-center">
+                    
+                    <div id="hero-stage-1" class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-5xl mx-auto space-y-5 md:space-y-8 z-30 pt-16 md:pt-0">
+                        <span class="inline-flex items-center gap-2 bg-[#CCD5AE]/50 backdrop-blur-md border border-[#CCD5AE] px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-semibold text-slate-700 shadow-sm max-w-[95vw]">
+                            <span class="w-2 h-2 shrink-0 rounded-full bg-[#6aabaf] animate-ping"></span>
+                            <span class="text-left sm:text-center">Empowering Global Student Awareness</span>
+                        </span>
+                        <h1 class="text-[2rem] leading-tight sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-slate-800">
+                            Human health is<br>
+                            <span class="gradient-text">ecosystem health.</span>
+                        </h1>
+                        <p class="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl font-normal leading-relaxed px-1">
+                            One Health is a collaborative, multisectoral approach working toward better health outcomes by recognizing the deep connection between people, animals, plants, and our shared environment.
+                        </p>
+                        <button class="bg-slate-700 text-white rounded-full h-12 md:h-14 px-6 md:px-8 text-sm font-semibold shadow-lg shadow-slate-700/10 flex items-center gap-3 transition-transform hover:scale-105 pointer-events-none">
+                            Scroll to learn more
+                            <i data-lucide="chevron-down" class="w-4 h-4 animate-bounce"></i>
+                        </button>
+                    </div>
+
+                    <div id="hero-stage-2" class="absolute inset-0 flex flex-col items-center justify-center z-20 opacity-0 scale-95 px-4 sm:px-6 pt-16 md:pt-0 overflow-y-auto md:overflow-visible">
+                        <div class="w-full max-w-4xl bg-white/60 backdrop-blur-xl border border-white p-5 sm:p-8 rounded-3xl md:rounded-[40px] shadow-2xl shadow-slate-200/50 grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-8 items-center relative my-auto">
+                            <div class="md:col-span-7 space-y-3 md:space-y-4 text-left">
+                                <span class="text-sm font-semibold text-[#6aabaf]">The One Health Approach</span>
+                                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 tracking-tight leading-tight">The Triad of Life</h3>
+                                <p class="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
+                                    When ecosystems degrade, wildlife suffers, and pathogens can more easily cross into human communities. Prevention starts with awareness, care, and working together across disciplines.
+                                </p>
+                                <div class="pt-2 flex flex-col sm:flex-row gap-2 sm:gap-4 text-sm font-medium text-slate-600">
+                                    <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-4 h-4 text-[#8a9478]"></i> Safe Environment</span>
+                                    <span class="flex items-center gap-1"><i data-lucide="droplet" class="w-4 h-4 text-[#6aabaf]"></i> Pure Water</span>
+                                </div>
+                            </div>
+                            <div class="md:col-span-5 flex justify-center">
+                                <!-- Kinetic Graphical Orb -->
+                                <div class="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full bg-gradient-to-tr from-[#CCD5AE] via-[#B3DEE2] to-[#CCD5AE] relative p-1 flex items-center justify-center animate-spin" style="animation-duration: 25s;">
+                                    <div class="w-full h-full bg-white rounded-full flex items-center justify-center text-slate-700">
+                                        <i data-lucide="heart-pulse" class="w-10 h-10 md:w-12 md:h-12 text-[#6aabaf]"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="hero-stage-3" class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-4xl mx-auto space-y-4 md:space-y-6 z-10 opacity-0 scale-95 pt-16 md:pt-0">
+                        <span class="text-sm font-semibold text-[#6aabaf]">Our Mission</span>
+                        <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-slate-800 leading-tight px-1">
+                            Building the next generation of advocates for planetary wellbeing.
+                        </h2>
+                        <p class="text-sm sm:text-base md:text-lg text-slate-600 font-normal max-w-xl mx-auto px-1">
+                            Join our student society to work alongside researchers, take part in community field projects, and contribute to collaborative policy and publication efforts.
+                        </p>
+                        <a href="#about" class="bg-[#6aabaf] text-white font-semibold text-sm px-6 md:px-8 py-3.5 md:py-4 rounded-full shadow-xl shadow-[#B3DEE2]/40 inline-block transition-transform hover:scale-105">
+                            Explore Our Pillars
+                        </a>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- PILLARS FRAMEWORK SECTION -->
+            <section id="about" class="py-16 md:py-32 relative bg-transparent">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                    
+                    <div class="max-w-3xl space-y-4 mb-10 md:mb-16 pillars-header">
+                        <span class="text-sm font-bold tracking-wide text-[#8a9478] uppercase">The Pillars of One Health</span>
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800">Understanding our radical interdependence</h2>
+                        <p class="text-slate-600 text-base font-normal">The health of humans, domestic and wild animals, plants, and the wider environment are closely linked — and we study them together.</p>
+                    </div>
+
+                    <div id="pillars-carousel" class="relative -mx-4 sm:mx-0">
+                        <p class="text-xs text-slate-500 text-center mb-3 md:hidden">Swipe to explore pillars</p>
+                        <div class="carousel-track flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 px-4 sm:px-1 scrollbar-hide snap-x snap-mandatory">
+                        <!-- Card 1 -->
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#B3DEE2]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#B3DEE2]/30 transition-all duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                            <div>
+                                <div class="w-12 h-12 rounded-xl bg-[#B3DEE2]/50 text-[#6aabaf] flex items-center justify-center mb-8">
+                                    <i data-lucide="user" class="w-5 h-5"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-4">Human Health</h3>
+                                <p class="text-base text-slate-600 leading-relaxed font-normal">Public health, safe food and water, sustainable cities, and tracking the spread of zoonotic diseases across communities.</p>
+                            </div>
+                            <div class="pt-6 flex justify-between items-center text-sm font-semibold text-[#6aabaf] border-t border-[#B3DEE2]/60 mt-6">
+                                <span>Ocean & Sky Initiative</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#CCD5AE]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#CCD5AE]/30 transition-all duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                            <div>
+                                <div class="w-12 h-12 rounded-xl bg-[#CCD5AE]/50 text-[#8a9478] flex items-center justify-center mb-8">
+                                    <i data-lucide="activity-square" class="w-5 h-5"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-4">Animal Health</h3>
+                                <p class="text-base text-slate-600 leading-relaxed font-normal">Monitoring wildlife biodiversity, domestic livestock safety, antimicrobial resistance, and habitat preservation.</p>
+                            </div>
+                            <div class="pt-6 flex justify-between items-center text-sm font-semibold text-[#8a9478] border-t border-[#CCD5AE]/60 mt-6">
+                                <span>Rainbow Yellow Scope</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#B3DEE2]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#B3DEE2]/30 transition-all duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                            <div>
+                                <div class="w-12 h-12 rounded-xl bg-[#B3DEE2]/50 text-[#6aabaf] flex items-center justify-center mb-8">
+                                    <i data-lucide="tree-pine" class="w-5 h-5"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-4">Environmental Health</h3>
+                                <p class="text-base text-slate-600 leading-relaxed font-normal">Combating deforestation, studying soil biomes, protecting climate integrity, and safeguarding plant and ecosystem wellbeing.</p>
+                            </div>
+                            <div class="pt-6 flex justify-between items-center text-sm font-semibold text-[#6aabaf] border-t border-[#B3DEE2]/60 mt-6">
+                                <span>Forest & Lime Focus</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        </div>
+                        <div class="flex justify-center gap-2 mt-8" id="pillars-dots"></div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- EXECUTIVE COMMITTEE LEADERSHIP -->
+            <section id="exco" class="py-16 md:py-32 bg-transparent">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                    
+                    <div class="max-w-3xl space-y-4 mb-10 md:mb-16 exco-header">
+                        <span class="text-sm font-bold tracking-wide text-[#6aabaf] uppercase block">Executive Committee</span>
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800">The Minds Driving Our Mission</h2>
+                        <p class="text-slate-600 text-base font-normal">Our leadership circle guides academic projects, eco-initiatives, and community integration across the society.</p>
+                    </div>
+
+                    <div id="exco-carousel" class="relative -mx-4 sm:mx-0">
+                        <p class="text-xs text-slate-500 text-center mb-3 md:hidden">Swipe to meet the team</p>
+                        <div class="carousel-track flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 px-4 sm:px-1 scrollbar-hide snap-x snap-mandatory">
+                        <!-- Member 1 -->
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                            <div class="w-20 h-20 mx-auto rounded-2xl bg-[#B3DEE2] text-slate-700 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:rotate-2">
+                                AM
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Dr. Alana Martinez</h4>
+                            <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">President & Ecologist</p>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">Leading global health intersection studies across multiple universities.</p>
+                        </div>
+
+                        <!-- Member 2 -->
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                            <div class="w-20 h-20 mx-auto rounded-2xl bg-[#CCD5AE] text-slate-700 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:-rotate-2">
+                                JH
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Julian Harper</h4>
+                            <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">VP / Wildlife Biologist</p>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">Specializing in zoonotic spillover tracking and protecting wildlife-human boundaries.</p>
+                        </div>
+
+                        <!-- Member 3 -->
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                            <div class="w-20 h-20 mx-auto rounded-2xl bg-amber-300 text-amber-900 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:rotate-2">
+                                SK
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Sanaa Kwei</h4>
+                            <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">Research Lead</p>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">Directing environmental impact studies and microplastic research initiatives.</p>
+                        </div>
+
+                        <!-- Member 4 -->
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                            <div class="w-20 h-20 mx-auto rounded-2xl bg-[#8a9478] text-white font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:-rotate-2">
+                                OB
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Oliver Bennett</h4>
+                            <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">Student Outreach</p>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">Managing collaborative society chapters across local and digital campuses.</p>
+                        </div>
+                        </div>
+                        <div class="flex justify-center gap-2 mt-8" id="exco-dots"></div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- KNOWLEDGE BASE BRIEF -->
+            <section id="articles" class="py-16 md:py-24 bg-transparent">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6 mb-10 md:mb-16">
+                        <div>
+                            <span class="text-sm font-bold tracking-wide text-[#8a9478] uppercase block">Knowledge Base</span>
+                            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800 mt-2">Latest Insights & Analysis</h2>
+                        </div>
+                        <a href="#" @click.prevent="currentRoute = 'articles'; window.scrollTo(0,0);" class="group text-sm font-semibold text-[#6aabaf] flex items-center gap-2 border-b-2 border-[#B3DEE2] pb-1 shrink-0">
+                            View full student journal <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+
+                    <!-- REUSABLE BLOG LIST COMPONENT -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+                        <article class="group cursor-pointer" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
+                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-white border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
+                                <div class="absolute inset-0 bg-gradient-to-tr from-[#B3DEE2] to-[#CCD5AE] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                                <i data-lucide="database" class="w-8 h-8 text-slate-300"></i>
+                            </div>
+                            <div class="space-y-2">
+                                <span class="text-sm font-semibold tracking-wide text-[#6aabaf]">Epidemiology</span>
+                                <h3 class="text-xl font-bold text-slate-800 group-hover:text-[#6aabaf] transition-colors">The Architecture of Spillover: How Deforestation Promotes Pandemics</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-2">As agricultural borders encroach deeper into natural rainforest biomes, contact between humans and wildlife increases — raising the risk of disease crossing between species.</p>
+                            </div>
+                        </article>
+
+                        <article class="group cursor-pointer" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
+                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-white border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
+                                <div class="absolute inset-0 bg-gradient-to-tr from-[#B3DEE2] to-[#CCD5AE] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                                <i data-lucide="activity" class="w-8 h-8 text-slate-300"></i>
+                            </div>
+                            <div class="space-y-2">
+                                <span class="text-sm font-semibold tracking-wide text-[#6aabaf]">Marine Ecosystems</span>
+                                <h3 class="text-xl font-bold text-slate-800 group-hover:text-[#6aabaf] transition-colors">Microplastics as Chemical Vectors in Marine Food Webs</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-2">How synthetic marine pollutants move through aquaculture and coastal food chains, eventually reaching the meals on our tables.</p>
+                            </div>
+                        </article>
+
+                        <article class="group cursor-pointer" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
+                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-white border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
+                                <div class="absolute inset-0 bg-gradient-to-tr from-[#CCD5AE] to-[#B3DEE2] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                                <i data-lucide="layers" class="w-8 h-8 text-slate-300"></i>
+                            </div>
+                            <div class="space-y-2">
+                                <span class="text-sm font-semibold tracking-wide text-amber-600">Agriculture</span>
+                                <h3 class="text-xl font-bold text-slate-800 group-hover:text-[#6aabaf] transition-colors">Regenerative Farming: Soil Biomes as Essential Public Health Assets</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-2">Industrial pesticide use can disrupt the microbial life in soil that naturally protects crops, nutrients, and local water tables.</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INTEGRATED NEWSLETTER INTAKE SYSTEM -->
+            <section id="newsletter" class="py-16 md:py-32 relative bg-transparent">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 text-center space-y-6 md:space-y-8">
+                    <div class="w-12 h-12 rounded-xl bg-[#B3DEE2]/40 border border-[#B3DEE2] shadow-sm flex items-center justify-center mx-auto text-slate-800">
+                        <i data-lucide="mail" class="w-5 h-5 text-[#6aabaf]"></i>
+                    </div>
+                    <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Stay Connected</span>
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800 leading-tight">Get our bi-weekly newsletter.</h2>
+                    <p class="text-base text-slate-600 font-normal max-w-lg mx-auto leading-relaxed">
+                        Receive updates on global health trends, climate research, society events, and student publications — curated by our executive team.
+                    </p>
+                    
+                    <form class="max-w-md mx-auto flex flex-col gap-3 md:block md:relative md:p-1.5 md:rounded-full md:border md:border-[#B3DEE2] md:bg-white/80 md:backdrop-blur-md md:focus-within:border-[#6aabaf] md:focus-within:bg-white transition-all duration-300" @submit.prevent="alert('Thank you for subscribing to our newsletter!')">
+                        <input type="email" required placeholder="you@university.edu" class="w-full bg-white/80 md:bg-transparent border border-[#B3DEE2] md:border-0 rounded-xl md:rounded-none pl-5 pr-5 md:pr-36 py-3.5 md:py-3 text-base md:text-sm font-medium text-slate-700 focus:outline-none focus:border-[#6aabaf]">
+                        <button type="submit" class="w-full md:w-auto md:absolute md:right-1.5 bg-slate-700 text-white px-5 py-3.5 md:py-3 rounded-xl md:rounded-full text-sm font-semibold hover:bg-slate-600 transition-colors">
+                            Subscribe
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- CONVERGENCE REGISTRY APPLICATION FORM -->
+            <section id="join" class="py-16 md:py-32 bg-slate-800 text-white border-t border-slate-700 rounded-t-[28px] md:rounded-t-[48px] relative overflow-hidden">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(204,213,174,0.15),transparent_50%)]"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(179,222,226,0.12),transparent_50%)]"></div>
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-16 items-center relative z-10">
+                    <div class="lg:col-span-6 space-y-5 md:space-y-6">
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight">Become an active advocate for planetary wellbeing.</h2>
+                        <p class="text-[#B3DEE2]/90 text-base font-normal leading-relaxed max-w-xl">
+                            Join our student society to work alongside research scientists, participate in local ecological field projects, and contribute to global collaborative policy efforts.
+                        </p>
+                        <div class="flex flex-col gap-3 text-sm font-medium text-[#CCD5AE]/90 pt-4">
+                            <div class="flex items-center gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-[#B3DEE2]"></i> Academic Credits</div>
+                            <div class="flex items-center gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-[#CCD5AE]"></i> Field Experience</div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-6 bg-white/5 border border-white/10 rounded-3xl md:rounded-[32px] p-6 sm:p-8 md:p-10 backdrop-blur-md">
+                        <form class="space-y-6" @submit.prevent="alert('Thank you for joining the One Health Student Society!')">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-[#B3DEE2]/80 mb-2">Full Name</label>
+                                    <input type="text" required placeholder="Jane Doe" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#B3DEE2]">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-[#B3DEE2]/80 mb-2">Academic Email</label>
+                                    <input type="email" required placeholder="jane.doe@university.edu" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#B3DEE2]">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#B3DEE2]/80 mb-2">Area of Interest</label>
+                                <select class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-slate-200 focus:outline-none focus:border-[#B3DEE2]">
+                                    <option>Human & Public Health</option>
+                                    <option>Wildlife & Animal Health</option>
+                                    <option>Environmental & Soil Science</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-[#6aabaf] hover:bg-[#B3DEE2] hover:text-slate-800 text-white font-semibold text-sm py-4 rounded-xl shadow-xl shadow-[#B3DEE2]/20 transition-colors">
+                                Submit Application
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ROUTE 2: ABOUT MODULE -->
+        <div x-show="currentRoute === 'about'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-12 md:space-y-16">
+            <div class="space-y-4">
+                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">About Us</span>
+                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">A society built on connection, not silos.</h1>
+                <p class="text-slate-600 text-base font-normal max-w-3xl leading-relaxed">
+                    Founded by students who believe human wellbeing depends on the health of our planet, we bring together people from medicine, veterinary science, ecology, and public health. We work as a bridge between university departments and the wider world.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
+                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[24px]">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Guided by Global Standards</h3>
+                    <p class="text-base text-slate-600 leading-relaxed font-normal">
+                        Our work aligns with guidelines from the World Health Organization (WHO) and the Food and Agriculture Organization (FAO), keeping our research grounded in trusted international frameworks.
+                    </p>
+                </div>
+                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[24px]">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Open to All Students</h3>
+                    <p class="text-base text-slate-600 leading-relaxed font-normal">
+                        Whether you're in the lab, in the field, or behind a desk, we offer research exposure, mentorship, and hands-on opportunities to learn how health connects across species and ecosystems.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROUTE 3: EVENTS CALENDAR MODULE -->
+        <div x-show="currentRoute === 'events'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-10 md:space-y-12">
+            <div class="space-y-4">
+                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Upcoming Events</span>
+                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">Symposiums & Field Projects</h1>
+            </div>
+            
+            <div class="space-y-4 pt-6">
+                <!-- Event 1 -->
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-lg transition-all">
+                    <div class="space-y-1">
+                        <span class="text-sm font-semibold text-[#6aabaf] tracking-wide block">September 14, 2026</span>
+                        <h3 class="text-lg font-bold text-slate-800">One Health Symposium: Disease & the Environment</h3>
+                        <p class="text-base text-slate-600 font-normal">A day of talks and workshops exploring how habitat loss and climate change shape the spread of disease between wildlife and people.</p>
+                    </div>
+                    <span class="bg-[#6aabaf] text-white text-sm font-semibold px-4 py-2.5 rounded-full w-full sm:w-auto text-center">Register</span>
+                </div>
+
+                <!-- Event 2 -->
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-lg transition-all">
+                    <div class="space-y-1">
+                        <span class="text-sm font-semibold text-[#6aabaf] tracking-wide block">October 02, 2026</span>
+                        <h3 class="text-lg font-bold text-slate-800">Estuary Soil & Water Field Study</h3>
+                        <p class="text-base text-slate-600 font-normal">A hands-on field trip to map soil health and nutrient runoff along a coastal estuary — open to all society members.</p>
+                    </div>
+                    <span class="bg-[#6aabaf] text-white text-sm font-semibold px-4 py-2.5 rounded-full w-full sm:w-auto text-center">Register</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROUTE 4: FULL DEDICATED JOURNAL NODE MODULE -->
+        <div x-show="currentRoute === 'articles'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-10 md:space-y-12">
+            <div class="space-y-4">
+                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Student Journal</span>
+                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">Latest Insights & Analysis</h1>
+                <p class="text-slate-600 text-base font-normal">Articles written by student members and reviewed by our faculty advisors.</p>
+            </div>
+
+            <!-- Complete Journal Listing -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
+                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[32px] space-y-4">
+                    <span class="text-sm font-semibold text-[#6aabaf] tracking-wide">Epidemiology</span>
+                    <h3 class="text-2xl font-bold text-slate-800 tracking-tight leading-tight">The Architecture of Spillover: How Deforestation Promotes Pandemics</h3>
+                    <p class="text-base text-slate-600 font-normal leading-relaxed">
+                        As agricultural borders encroach deeper into natural rainforest biomes, contact between humans and wildlife increases — raising the risk of disease crossing between species.
+                    </p>
+                    <div class="text-sm font-medium text-slate-400 pt-2 flex items-center gap-4"><span>Published June 24, 2026</span><span>•</span><span>5 min read</span></div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[32px] space-y-4">
+                    <span class="text-sm font-semibold text-[#6aabaf] tracking-wide">Marine Ecosystems</span>
+                    <h3 class="text-2xl font-bold text-slate-800 tracking-tight leading-tight">Microplastics as Chemical Vectors in Marine Food Webs</h3>
+                    <p class="text-base text-slate-600 font-normal leading-relaxed">
+                        How synthetic marine pollutants move through aquaculture and coastal food chains, eventually reaching the meals on our tables.
+                    </p>
+                    <div class="text-sm font-medium text-slate-400 pt-2 flex items-center gap-4"><span>Published June 18, 2026</span><span>•</span><span>8 min read</span></div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[32px] space-y-4">
+                    <span class="text-sm font-semibold text-amber-600 tracking-wide">Agriculture</span>
+                    <h3 class="text-2xl font-bold text-slate-800 tracking-tight leading-tight">Regenerative Farming: Soil Biomes as Essential Public Health Assets</h3>
+                    <p class="text-base text-slate-600 font-normal leading-relaxed">
+                        Industrial pesticide use can disrupt the microbial life in soil that naturally protects crops, nutrients, and local water tables.
+                    </p>
+                    <div class="text-sm font-medium text-slate-400 pt-2 flex items-center gap-4"><span>Published June 11, 2026</span><span>•</span><span>4 min read</span></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- PREMIUM REFINED FOOTER SYSTEM (Lighter Shade Palette) -->
+    <footer class="bg-slate-800 text-white relative border-t border-slate-700 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-16 md:pt-24 pb-10 md:pb-12 relative z-10">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 pb-12 md:pb-24 border-b border-slate-700/60">
+                <div class="space-y-4 sm:col-span-2 md:col-span-1">
+                    <span class="font-display font-bold text-xl tracking-tight">ONE<span class="text-[#B3DEE2] font-normal">/</span>HEALTH</span>
+                    <p class="text-sm text-slate-300 font-normal leading-relaxed max-w-xs">
+                        Cultivating thoughtful solutions at the intersection of climate, human, and animal wellbeing.
+                    </p>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="text-sm font-semibold text-[#CCD5AE]">Navigation</h4>
+                    <ul class="text-sm space-y-2.5 text-slate-300 font-normal">
+                        <li><a href="#about" @click="currentRoute = 'home'" class="hover:text-[#B3DEE2] transition-colors">About</a></li>
+                        <li><a href="#exco" @click="currentRoute = 'home'" class="hover:text-[#B3DEE2] transition-colors">Leadership</a></li>
+                        <li><a href="#" @click.prevent="currentRoute = 'articles'; window.scrollTo(0,0);" class="hover:text-[#B3DEE2] transition-colors">Insights</a></li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="text-sm font-semibold text-[#CCD5AE]">Resources</h4>
+                    <ul class="text-sm space-y-2.5 text-slate-300 font-normal">
+                        <li><a href="#" class="hover:text-[#B3DEE2] transition-colors">WHO Guidelines</a></li>
+                        <li><a href="#" class="hover:text-[#B3DEE2] transition-colors">CDC Dashboard</a></li>
+                        <li><a href="#" class="hover:text-[#B3DEE2] transition-colors">FAO Resources</a></li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="text-sm font-semibold text-[#CCD5AE]">Connect</h4>
+                    <div class="flex gap-4 text-slate-400">
+                        <a href="#" class="hover:text-[#B3DEE2] transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+                        <a href="#" class="hover:text-[#B3DEE2] transition-colors"><i data-lucide="github" class="w-4 h-4"></i></a>
+                        <a href="#" class="hover:text-[#B3DEE2] transition-colors"><i data-lucide="linkedin" class="w-4 h-4"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-6 md:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-400 font-normal text-center sm:text-left">
+                <span class="max-w-sm sm:max-w-none">&copy; 2026 One Health Student Society. Distributed under MIT License.</span>
+                <div class="flex flex-wrap justify-center gap-4 sm:gap-6">
+                    <a href="#" class="hover:underline">Privacy Policy</a>
+                    <a href="#" class="hover:underline">Terms of Use</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-text-wrap relative w-full overflow-hidden footer-watermark" aria-hidden="true">
+            <div class="h-full flex items-end justify-center">
+                <p class="footer-watermark-text font-display font-bold tracking-tight uppercase leading-none text-slate-700/30 whitespace-nowrap select-none pointer-events-none">
+                    ONE<span class="text-[#B3DEE2]/35 font-normal">/</span>HEALTH
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- GSAP IMMERSIVE KINETIC ANIMATION CONTROLLERS -->
+    <script>
+        lucide.createIcons();
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('scrollProgress').style.width = (winScroll / height) * 100 + '%';
+        });
+
+        // Hero scroll — shorter track on mobile; desktop unchanged
+        const mobileQuery = window.matchMedia('(max-width: 767px)');
+        function getHeroScrollEnd() {
+            return mobileQuery.matches ? '+=160%' : '+=200%';
+        }
+
+        let heroTimeline;
+        let heroScrollTrigger;
+        function buildHeroTimeline() {
+            if (heroScrollTrigger) heroScrollTrigger.kill();
+            if (heroTimeline) heroTimeline.kill();
+            gsap.set('#hero-stage-1', { clearProps: 'all' });
+            gsap.set('#hero-stage-2', { opacity: 0, scale: 0.95 });
+            gsap.set('#hero-stage-3', { opacity: 0, scale: 0.95 });
+
+            heroTimeline = gsap.timeline({
+                scrollTrigger: {
+                    trigger: '#hero-trigger-context',
+                    start: 'top top',
+                    end: getHeroScrollEnd(),
+                    scrub: 1,
+                    pin: '#hero-pin-wrapper',
+                    pinSpacing: true,
+                    anticipatePin: 1,
+                    invalidateOnRefresh: true
+                }
+            });
+            heroScrollTrigger = heroTimeline.scrollTrigger;
+
+            heroTimeline
+                .to('#hero-stage-1', { opacity: 0, scale: 0.92, y: -40, duration: 1 })
+                .to('#hero-stage-2', { opacity: 1, scale: 1, duration: 1 }, '-=0.4')
+                .to('#hero-stage-2', { opacity: 1, duration: 0.8 })
+                .to('#hero-stage-2', { opacity: 0, scale: 1.03, y: -24, duration: 1 })
+                .to('#hero-stage-3', { opacity: 1, scale: 1, duration: 1 }, '-=0.4')
+                .to('#hero-stage-3', { opacity: 1, scale: 1, duration: 0.6 });
+        }
+        buildHeroTimeline();
+
+        // Section fade-ins (reliable — set visible state after animate)
+        function fadeInSection(selector, trigger, start = "top 85%") {
+            const els = document.querySelectorAll(selector);
+            if (!els.length) return;
+            gsap.set(els, { opacity: 0, y: 36 });
+            gsap.to(els, {
+                opacity: 1,
+                y: 0,
+                duration: 1,
+                ease: "power3.out",
+                stagger: 0.12,
+                scrollTrigger: {
+                    trigger: trigger,
+                    start: start,
+                    once: true,
+                    toggleActions: "play none none none"
+                }
+            });
+        }
+
+        fadeInSection(".pillars-header", "#about");
+        fadeInSection(".pillar-card", "#pillars-carousel", "top 88%");
+        fadeInSection(".exco-header", "#exco");
+        fadeInSection(".exco-card", "#exco-carousel", "top 88%");
+
+        // Horizontal carousels — auto-advance on mobile/tablet; desktop grid still scrollable
+        function initCarousel(trackId, dotsId, intervalMs = 5000) {
+            const track = document.querySelector(`#${trackId} .carousel-track`);
+            const dotsContainer = document.getElementById(dotsId);
+            if (!track || !dotsContainer) return;
+
+            const slides = Array.from(track.querySelectorAll('.carousel-slide'));
+            if (!slides.length) return;
+
+            let index = 0;
+            let timer = null;
+            let paused = false;
+
+            slides.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'w-2.5 h-2.5 rounded-full transition-all duration-300 ' + (i === 0 ? 'bg-[#6aabaf] w-6' : 'bg-[#B3DEE2]');
+                dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+                dot.addEventListener('click', () => goTo(i, true));
+                dotsContainer.appendChild(dot);
+            });
+
+            const dots = Array.from(dotsContainer.children);
+
+            function updateDots() {
+                dots.forEach((dot, i) => {
+                    dot.className = 'w-2.5 h-2.5 rounded-full transition-all duration-300 ' +
+                        (i === index ? 'bg-[#6aabaf] w-6' : 'bg-[#B3DEE2]');
+                });
+            }
+
+            function goTo(i, userInitiated = false) {
+                index = ((i % slides.length) + slides.length) % slides.length;
+                const slide = slides[index];
+                const offset = slide.offsetLeft - track.offsetLeft - (track.clientWidth - slide.offsetWidth) / 2;
+                track.scrollTo({ left: Math.max(0, offset), behavior: 'smooth' });
+                updateDots();
+                if (userInitiated) resetTimer();
+            }
+
+            function next() {
+                goTo(index + 1);
+            }
+
+            function resetTimer() {
+                if (timer) clearInterval(timer);
+                if (!paused) timer = setInterval(next, intervalMs);
+            }
+
+            track.addEventListener('scroll', () => {
+                const center = track.scrollLeft + track.clientWidth / 2;
+                let closest = 0;
+                let minDist = Infinity;
+                slides.forEach((slide, i) => {
+                    const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+                    const dist = Math.abs(center - slideCenter);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closest = i;
+                    }
+                });
+                if (closest !== index) {
+                    index = closest;
+                    updateDots();
+                }
+            }, { passive: true });
+
+            track.addEventListener('mouseenter', () => { paused = true; if (timer) clearInterval(timer); });
+            track.addEventListener('mouseleave', () => { paused = false; resetTimer(); });
+            track.addEventListener('touchstart', () => { paused = true; if (timer) clearInterval(timer); }, { passive: true });
+            track.addEventListener('touchend', () => { setTimeout(() => { paused = false; resetTimer(); }, 3000); }, { passive: true });
+
+            resetTimer();
+        }
+
+        initCarousel('pillars-carousel', 'pillars-dots', 5000);
+        initCarousel('exco-carousel', 'exco-dots', 5000);
+
+        ScrollTrigger.refresh();
+        window.addEventListener('load', () => ScrollTrigger.refresh());
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                buildHeroTimeline();
+                ScrollTrigger.refresh();
+            }, 200);
+        });
+        mobileQuery.addEventListener('change', () => {
+            buildHeroTimeline();
+            ScrollTrigger.refresh();
+        });
+    </script>
+</body>
+</html>
