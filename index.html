@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>One Health Student Society</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     
     <!-- Tailwind CSS v4 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -85,16 +86,46 @@
             #mainHeader {
                 top: calc(0.75rem + env(safe-area-inset-top, 0px));
             }
-            #pillars-dots button,
-            #exco-dots button {
-                min-width: 2.75rem;
-                min-height: 2.75rem;
-                padding: 0.625rem;
-            }
         }
 
         [x-cloak] {
             display: none !important;
+        }
+
+        .btn-liquid {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-liquid::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: #B3DEE2;
+            border-radius: 40%;
+            opacity: 0;
+            transition: top 0.9s ease-in-out, opacity 0.7s ease-in-out;
+            z-index: -1;
+        }
+        .btn-liquid:hover::before {
+            top: -50%;
+            opacity: 1;
+            animation: spin-liquid 0.8s ease-out forwards;
+        }
+        @keyframes spin-liquid {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn-liquid:hover {
+            color: #334155 !important;
+        }
+
+        .edge-fade {
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
         }
 
         .footer-watermark {
@@ -126,20 +157,69 @@
         <div class="bg-white/40 backdrop-blur-xl border border-white/40 rounded-full px-4 md:px-8 h-16 md:h-20 flex items-center justify-between shadow-sm relative group/header hover:bg-white/60 hover:border-slate-200/50 hover:shadow-xl hover:shadow-slate-100/40 transition-all duration-500">
             
             <a href="#" @click.prevent="currentRoute = 'home'; window.scrollTo(0,0);" class="flex items-center gap-2 md:gap-3 font-bold text-lg md:text-xl tracking-tight text-slate-800 group min-w-0">
-                <div class="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center rounded-lg bg-[#8a9478] text-white transition-transform duration-500 group-hover:rotate-90">
-                    <i data-lucide="globe" class="w-4 h-4 text-[#CCD5AE]"></i>
-                </div>
+                <img src="logo.png" alt="One Health Logo" class="h-8 md:h-10 object-contain transition-transform duration-500 group-hover:scale-105">
                 <span class="font-display truncate">ONE<span class="text-[#6aabaf] font-normal">/</span>HEALTH</span>
             </a>
 
-            <nav class="hidden md:flex items-center gap-2 relative bg-[#CCD5AE]/20 p-1.5 rounded-full border border-[#CCD5AE]/40">
-                <a href="#about" @click="currentRoute = 'home'" :class="currentRoute === 'home' ? 'text-slate-800 bg-white shadow-sm' : 'text-slate-600 hover:text-[#6aabaf]'" class="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300">About</a>
-                <a href="#exco" @click="currentRoute = 'home'" class="px-5 py-2.5 rounded-full text-sm font-medium text-slate-600 hover:text-[#6aabaf] transition-all duration-300">Leadership</a>
-                <a href="#" @click.prevent="currentRoute = 'articles'; window.scrollTo(0,0);" :class="currentRoute === 'articles' ? 'text-slate-800 bg-white shadow-sm' : 'text-slate-600 hover:text-[#6aabaf]'" class="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300">Insights</a>
+            <nav class="hidden md:flex items-center relative bg-[#CCD5AE]/20 p-1.5 rounded-full border border-[#CCD5AE]/40"
+                 x-data="{
+                     activeTab: 'about',
+                     hoveredTab: null,
+                     updateBlob(target) {
+                         if (!target) return;
+                         this.$refs.blob.style.left = target.offsetLeft + 'px';
+                         this.$refs.blob.style.width = target.offsetWidth + 'px';
+                         this.$refs.blob.style.height = target.offsetHeight + 'px';
+                         this.$refs.blob.style.top = target.offsetTop + 'px';
+                         this.$refs.blob.style.opacity = 1;
+                     },
+                     resetBlob() {
+                         const activeEl = this.$el.querySelector(`[data-tab='${this.activeTab}']`);
+                         if(activeEl) this.updateBlob(activeEl);
+                     },
+                     init() {
+                         this.$watch('activeTab', () => {
+                             this.$nextTick(() => this.resetBlob());
+                         });
+                         this.$nextTick(() => this.resetBlob());
+                     }
+                 }"
+                 @mouseleave="hoveredTab = null; resetBlob()"
+            >
+                <!-- Animated background blob -->
+                <div x-ref="blob" class="absolute bg-white shadow-sm rounded-full transition-all duration-300 ease-out z-0 opacity-0 pointer-events-none"></div>
+
+                <a href="#about" 
+                   data-tab="about"
+                   @mouseenter="hoveredTab = 'about'; updateBlob($el)" 
+                   @click="currentRoute = 'home'; activeTab = 'about'" 
+                   :class="(hoveredTab === 'about' || (!hoveredTab && activeTab === 'about')) ? 'text-slate-800' : 'text-slate-600 hover:text-[#6aabaf]'" 
+                   class="relative z-10 px-5 py-2.5 rounded-full text-sm font-medium transition-colors duration-300">About</a>
+                
+                <a href="#exco" 
+                   data-tab="leadership"
+                   @mouseenter="hoveredTab = 'leadership'; updateBlob($el)" 
+                   @click="currentRoute = 'home'; activeTab = 'leadership'" 
+                   :class="(hoveredTab === 'leadership' || (!hoveredTab && activeTab === 'leadership')) ? 'text-slate-800' : 'text-slate-600 hover:text-[#6aabaf]'" 
+                   class="relative z-10 px-5 py-2.5 rounded-full text-sm font-medium transition-colors duration-300">Leadership</a>
+
+                <a href="#" 
+                   data-tab="events"
+                   @mouseenter="hoveredTab = 'events'; updateBlob($el)" 
+                   @click.prevent="currentRoute = 'events'; activeTab = 'events'; window.scrollTo(0,0);" 
+                   :class="(hoveredTab === 'events' || (!hoveredTab && activeTab === 'events')) ? 'text-slate-800' : 'text-slate-600 hover:text-[#6aabaf]'" 
+                   class="relative z-10 px-5 py-2.5 rounded-full text-sm font-medium transition-colors duration-300">Events</a>
+
+                <a href="#" 
+                   data-tab="articles"
+                   @mouseenter="hoveredTab = 'articles'; updateBlob($el)" 
+                   @click.prevent="currentRoute = 'articles'; activeTab = 'articles'; window.scrollTo(0,0);" 
+                   :class="(hoveredTab === 'articles' || (!hoveredTab && activeTab === 'articles')) ? 'text-slate-800' : 'text-slate-600 hover:text-[#6aabaf]'" 
+                   class="relative z-10 px-5 py-2.5 rounded-full text-sm font-medium transition-colors duration-300">Articles</a>
             </nav>
 
             <div class="hidden md:flex items-center">
-                <a href="#join" @click="currentRoute = 'home'" class="bg-slate-700 text-white px-7 h-12 flex items-center justify-center rounded-full text-sm font-semibold shadow-md shadow-slate-700/15 transition-colors duration-300 hover:bg-slate-600">
+                <a href="#join" @click="currentRoute = 'home'" class="btn-liquid bg-slate-700 text-white px-7 h-12 flex items-center justify-center rounded-full text-sm font-semibold shadow-md shadow-slate-700/15 transition-colors duration-300">
                     <span class="flex items-center gap-2">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
                         Join Society
@@ -164,7 +244,8 @@
              class="absolute top-[4.25rem] left-0 w-full bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-3xl p-4 shadow-2xl flex flex-col gap-2 md:hidden max-h-[calc(100dvh-5.5rem)] overflow-y-auto">
             <a href="#about" @click="currentRoute = 'home'; mobileMenu = false;" class="px-4 py-3 rounded-xl bg-[#B3DEE2]/40 font-semibold text-slate-800 text-base">About</a>
             <a href="#exco" @click="currentRoute = 'home'; mobileMenu = false;" class="px-4 py-3 rounded-xl hover:bg-[#B3DEE2]/30 font-semibold text-slate-700 text-base">Leadership</a>
-            <a href="#" @click.prevent="currentRoute = 'articles'; mobileMenu = false; window.scrollTo(0,0);" class="px-4 py-3 rounded-xl hover:bg-[#B3DEE2]/30 font-semibold text-slate-700 text-base">Insights</a>
+            <a href="#" @click.prevent="currentRoute = 'events'; mobileMenu = false; window.scrollTo(0,0);" class="px-4 py-3 rounded-xl hover:bg-[#B3DEE2]/30 font-semibold text-slate-700 text-base">Events</a>
+            <a href="#" @click.prevent="currentRoute = 'articles'; mobileMenu = false; window.scrollTo(0,0);" class="px-4 py-3 rounded-xl hover:bg-[#B3DEE2]/30 font-semibold text-slate-700 text-base">Articles</a>
             <a href="#join" @click="currentRoute = 'home'; mobileMenu = false;" class="w-full text-center bg-slate-700 text-white py-3.5 rounded-xl font-semibold text-sm mt-2">Join Society</a>
         </div>
     </header>
@@ -179,35 +260,42 @@
             <section id="hero-trigger-context" class="relative bg-transparent w-full">
                 <div id="hero-pin-wrapper" class="relative w-full h-[100dvh] min-h-[600px] md:min-h-0 md:h-screen overflow-hidden flex items-center justify-center">
                     
+                    <!-- Blurry Globe Background -->
+                    <div class="absolute inset-0 flex items-center justify-center z-0 opacity-40 pointer-events-none mix-blend-multiply transition-transform duration-1000 scale-110">
+                        <img src="assets/globe_illustration.png" alt="" class="w-[88vw] sm:w-[66vw] md:w-[55vw] max-w-[550px] object-contain opacity-40">
+                    </div>
+
                     <div id="hero-stage-1" class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-5xl mx-auto space-y-5 md:space-y-8 z-30 pt-16 md:pt-0">
                         <span class="inline-flex items-center gap-2 bg-[#CCD5AE]/50 backdrop-blur-md border border-[#CCD5AE] px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-semibold text-slate-700 shadow-sm max-w-[95vw]">
                             <span class="w-2 h-2 shrink-0 rounded-full bg-[#6aabaf] animate-ping"></span>
-                            <span class="text-left sm:text-center">Empowering Global Student Awareness</span>
+                            <span class="text-left sm:text-center">A Student Society for Environmental Inquiry</span>
                         </span>
                         <h1 class="text-[2rem] leading-tight sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-slate-800">
-                            Human health is<br>
+                            Student-led research for<br>
                             <span class="gradient-text">ecosystem health.</span>
                         </h1>
                         <p class="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl font-normal leading-relaxed px-1">
-                            One Health is a collaborative, multisectoral approach working toward better health outcomes by recognizing the deep connection between people, animals, plants, and our shared environment.
+                            We are a collaborative student society dedicated to the One Health approach. Join us to conduct field projects, peer-review findings, and publish research that explores the deep connection between people, animals, and the environment.
                         </p>
-                        <button class="bg-slate-700 text-white rounded-full h-12 md:h-14 px-6 md:px-8 text-sm font-semibold shadow-lg shadow-slate-700/10 flex items-center gap-3 transition-transform hover:scale-105 pointer-events-none">
-                            Scroll to learn more
-                            <i data-lucide="chevron-down" class="w-4 h-4 animate-bounce"></i>
+                        <button @click="window.scrollBy({top: window.innerHeight * 0.7, behavior: 'smooth'})" class="mt-8 flex flex-col items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer group">
+                            <span class="text-[10px] font-bold uppercase tracking-widest group-hover:text-[#6aabaf] transition-colors">Scroll</span>
+                            <div class="w-10 h-10 rounded-full border border-slate-300 flex items-center justify-center group-hover:border-[#6aabaf] group-hover:bg-[#B3DEE2]/20 transition-all">
+                                <i data-lucide="arrow-down" class="w-4 h-4 animate-bounce group-hover:text-[#6aabaf] transition-colors"></i>
+                            </div>
                         </button>
                     </div>
 
                     <div id="hero-stage-2" class="absolute inset-0 flex flex-col items-center justify-center z-20 opacity-0 scale-95 px-4 sm:px-6 pt-16 md:pt-0 overflow-y-auto md:overflow-visible">
                         <div class="w-full max-w-4xl bg-white/60 backdrop-blur-xl border border-white p-5 sm:p-8 rounded-3xl md:rounded-[40px] shadow-2xl shadow-slate-200/50 grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-8 items-center relative my-auto">
                             <div class="md:col-span-7 space-y-3 md:space-y-4 text-left">
-                                <span class="text-sm font-semibold text-[#6aabaf]">The One Health Approach</span>
-                                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 tracking-tight leading-tight">The Triad of Life</h3>
+                                <span class="text-sm font-semibold text-[#6aabaf]">Our Academic Focus</span>
+                                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 tracking-tight leading-tight">Interdisciplinary Research</h3>
                                 <p class="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-                                    When ecosystems degrade, wildlife suffers, and pathogens can more easily cross into human communities. Prevention starts with awareness, care, and working together across disciplines.
+                                    We bring together students from epidemiology, ecology, and veterinary disciplines. Through our student-led initiatives, we turn academic curiosity into published findings and actionable environmental science.
                                 </p>
                                 <div class="pt-2 flex flex-col sm:flex-row gap-2 sm:gap-4 text-sm font-medium text-slate-600">
-                                    <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-4 h-4 text-[#8a9478]"></i> Safe Environment</span>
-                                    <span class="flex items-center gap-1"><i data-lucide="droplet" class="w-4 h-4 text-[#6aabaf]"></i> Pure Water</span>
+                                    <span class="flex items-center gap-1"><i data-lucide="microscope" class="w-4 h-4 text-[#8a9478]"></i> Empirical Studies</span>
+                                    <span class="flex items-center gap-1"><i data-lucide="book-open" class="w-4 h-4 text-[#6aabaf]"></i> Student Publications</span>
                                 </div>
                             </div>
                             <div class="md:col-span-5 flex justify-center">
@@ -222,15 +310,15 @@
                     </div>
 
                     <div id="hero-stage-3" class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-4xl mx-auto space-y-4 md:space-y-6 z-10 opacity-0 scale-95 pt-16 md:pt-0">
-                        <span class="text-sm font-semibold text-[#6aabaf]">Our Mission</span>
+                        <span class="text-sm font-semibold text-[#6aabaf]">Our Scholarly Focus</span>
                         <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-slate-800 leading-tight px-1">
-                            Building the next generation of advocates for planetary wellbeing.
+                            Building a portfolio of scientific inquiry and publishing.
                         </h2>
                         <p class="text-sm sm:text-base md:text-lg text-slate-600 font-normal max-w-xl mx-auto px-1">
-                            Join our student society to work alongside researchers, take part in community field projects, and contribute to collaborative policy and publication efforts.
+                            Contribute to our peer-reviewed student journal, collaborate on longitudinal field studies, and engage in research methodologies alongside peers and faculty advisors.
                         </p>
                         <a href="#about" class="bg-[#6aabaf] text-white font-semibold text-sm px-6 md:px-8 py-3.5 md:py-4 rounded-full shadow-xl shadow-[#B3DEE2]/40 inline-block transition-transform hover:scale-105">
-                            Explore Our Pillars
+                            Examine Our Research Pillars
                         </a>
                     </div>
 
@@ -238,20 +326,25 @@
             </section>
 
             <!-- PILLARS FRAMEWORK SECTION -->
-            <section id="about" class="py-16 md:py-32 relative bg-transparent">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+            <section id="about" class="py-16 md:py-32 relative bg-transparent overflow-hidden">
+                <!-- Decorative Graphic -->
+                <div class="absolute bottom-0 right-0 md:right-10 w-[240px] sm:w-[320px] md:w-[480px] pointer-events-none mix-blend-multiply origin-bottom opacity-20 md:opacity-40 border-b-2 border-slate-200/50 pb-2">
+                    <img src="assets/one_health.png" alt="" class="w-full h-auto" aria-hidden="true">
+                </div>
+
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 relative z-10">
                     
                     <div class="max-w-3xl space-y-4 mb-10 md:mb-16 pillars-header">
-                        <span class="text-sm font-bold tracking-wide text-[#8a9478] uppercase">The Pillars of One Health</span>
+                        <span class="text-sm font-bold tracking-wide text-[#8a9478] uppercase">Our Research Focus</span>
                         <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800">Understanding our radical interdependence</h2>
-                        <p class="text-slate-600 text-base font-normal">The health of humans, domestic and wild animals, plants, and the wider environment are closely linked — and we study them together.</p>
+                        <p class="text-slate-600 text-base font-normal">Our student publishing and field projects are categorized into these core areas, helping us track how human, animal, and environmental wellbeing are linked.</p>
                     </div>
 
                     <div id="pillars-carousel" class="relative -mx-4 sm:mx-0">
                         <p class="text-xs text-slate-500 text-center mb-3 md:hidden">Swipe to explore pillars</p>
-                        <div class="carousel-track flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 px-4 sm:px-1 scrollbar-hide snap-x snap-mandatory">
+                        <div class="carousel-track edge-fade flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 px-4 sm:px-1 scrollbar-hide snap-x snap-mandatory">
                         <!-- Card 1 -->
-                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#B3DEE2]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#B3DEE2]/30 transition-all duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#B3DEE2]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#B3DEE2]/30 transition-[border-color,box-shadow,transform] duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
                             <div>
                                 <div class="w-12 h-12 rounded-xl bg-[#B3DEE2]/50 text-[#6aabaf] flex items-center justify-center mb-8">
                                     <i data-lucide="user" class="w-5 h-5"></i>
@@ -266,7 +359,7 @@
                         </div>
 
                         <!-- Card 2 -->
-                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#CCD5AE]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#CCD5AE]/30 transition-all duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#CCD5AE]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#CCD5AE]/30 transition-[border-color,box-shadow,transform] duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
                             <div>
                                 <div class="w-12 h-12 rounded-xl bg-[#CCD5AE]/50 text-[#8a9478] flex items-center justify-center mb-8">
                                     <i data-lucide="activity-square" class="w-5 h-5"></i>
@@ -281,7 +374,7 @@
                         </div>
 
                         <!-- Card 3 -->
-                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#B3DEE2]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#B3DEE2]/30 transition-all duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-[#B3DEE2]/50 shadow-sm group hover:shadow-2xl hover:shadow-[#B3DEE2]/30 transition-[border-color,box-shadow,transform] duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
                             <div>
                                 <div class="w-12 h-12 rounded-xl bg-[#B3DEE2]/50 text-[#6aabaf] flex items-center justify-center mb-8">
                                     <i data-lucide="tree-pine" class="w-5 h-5"></i>
@@ -291,6 +384,36 @@
                             </div>
                             <div class="pt-6 flex justify-between items-center text-sm font-semibold text-[#6aabaf] border-t border-[#B3DEE2]/60 mt-6">
                                 <span>Forest & Lime Focus</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-amber-200/50 shadow-sm group hover:shadow-2xl hover:shadow-amber-200/30 transition-[border-color,box-shadow,transform] duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                            <div>
+                                <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-8">
+                                    <i data-lucide="microscope" class="w-5 h-5"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-4">Research & Data</h3>
+                                <p class="text-base text-slate-600 leading-relaxed font-normal">Synthesizing global data points, supporting lab research, and publishing cross-disciplinary findings on global health.</p>
+                            </div>
+                            <div class="pt-6 flex justify-between items-center text-sm font-semibold text-amber-600 border-t border-amber-200/60 mt-6">
+                                <span>Data Syndicate</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 5 -->
+                        <div class="carousel-slide pillar-card shrink-0 w-[min(88vw,340px)] sm:w-[70vw] lg:w-[calc(33.333%-1rem)] bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-indigo-200/50 shadow-sm group hover:shadow-2xl hover:shadow-indigo-200/30 transition-[border-color,box-shadow,transform] duration-500 flex flex-col justify-between min-h-[280px] md:min-h-[350px]">
+                            <div>
+                                <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-500 flex items-center justify-center mb-8">
+                                    <i data-lucide="globe-2" class="w-5 h-5"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-4">Policy & Advocacy</h3>
+                                <p class="text-base text-slate-600 leading-relaxed font-normal">Engaging with institutional leaders, advocating for eco-conscious legislation, and spreading public awareness.</p>
+                            </div>
+                            <div class="pt-6 flex justify-between items-center text-sm font-semibold text-indigo-500 border-t border-indigo-200/60 mt-6">
+                                <span>Global Action Plan</span>
                                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
                             </div>
                         </div>
@@ -307,15 +430,15 @@
                     
                     <div class="max-w-3xl space-y-4 mb-10 md:mb-16 exco-header">
                         <span class="text-sm font-bold tracking-wide text-[#6aabaf] uppercase block">Executive Committee</span>
-                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800">The Minds Driving Our Mission</h2>
-                        <p class="text-slate-600 text-base font-normal">Our leadership circle guides academic projects, eco-initiatives, and community integration across the society.</p>
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800">The Team Behind the Research</h2>
+                        <p class="text-slate-600 text-base font-normal">Our student leadership coordinates field projects, manages the peer-review pipeline for our journal, and organizes society events across campus.</p>
                     </div>
 
                     <div id="exco-carousel" class="relative -mx-4 sm:mx-0">
                         <p class="text-xs text-slate-500 text-center mb-3 md:hidden">Swipe to meet the team</p>
-                        <div class="carousel-track flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 px-4 sm:px-1 scrollbar-hide snap-x snap-mandatory">
+                        <div class="carousel-track edge-fade flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 px-4 sm:px-1 scrollbar-hide snap-x snap-mandatory">
                         <!-- Member 1 -->
-                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-[border-color,box-shadow,transform] duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
                             <div class="w-20 h-20 mx-auto rounded-2xl bg-[#B3DEE2] text-slate-700 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:rotate-2">
                                 AM
                             </div>
@@ -325,7 +448,7 @@
                         </div>
 
                         <!-- Member 2 -->
-                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-[border-color,box-shadow,transform] duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
                             <div class="w-20 h-20 mx-auto rounded-2xl bg-[#CCD5AE] text-slate-700 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:-rotate-2">
                                 JH
                             </div>
@@ -335,7 +458,7 @@
                         </div>
 
                         <!-- Member 3 -->
-                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-[border-color,box-shadow,transform] duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
                             <div class="w-20 h-20 mx-auto rounded-2xl bg-amber-300 text-amber-900 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:rotate-2">
                                 SK
                             </div>
@@ -345,13 +468,43 @@
                         </div>
 
                         <!-- Member 4 -->
-                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-all duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-[border-color,box-shadow,transform] duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
                             <div class="w-20 h-20 mx-auto rounded-2xl bg-[#8a9478] text-white font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:-rotate-2">
                                 OB
                             </div>
                             <h4 class="text-lg font-bold text-slate-800">Oliver Bennett</h4>
                             <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">Student Outreach</p>
                             <p class="text-base text-slate-600 font-normal leading-relaxed">Managing collaborative society chapters across local and digital campuses.</p>
+                        </div>
+
+                        <!-- Member 5 -->
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-[border-color,box-shadow,transform] duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                            <div class="w-20 h-20 mx-auto rounded-2xl bg-indigo-200 text-indigo-800 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:rotate-2">
+                                MR
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Maya Rahman</h4>
+                            <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">Policy Coordinator</p>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">Liaising with city planners to advocate for sustainable urban wildlife integrations.</p>
+                        </div>
+
+                        <!-- Member 6 -->
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-[border-color,box-shadow,transform] duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                            <div class="w-20 h-20 mx-auto rounded-2xl bg-rose-200 text-rose-800 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:-rotate-2">
+                                TC
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Tyler Chen</h4>
+                            <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">Data Scientist</p>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">Building predictive models for zoonotic spillover risk mapping globally.</p>
+                        </div>
+
+                        <!-- Member 7 -->
+                        <div class="carousel-slide exco-card shrink-0 w-[min(85vw,320px)] sm:w-[55vw] lg:w-[calc(25%-1.125rem)] group border border-white/60 rounded-3xl p-6 bg-white/60 backdrop-blur-md text-center transition-[border-color,box-shadow,transform] duration-500 hover:border-[#B3DEE2] hover:shadow-xl">
+                            <div class="w-20 h-20 mx-auto rounded-2xl bg-emerald-200 text-emerald-800 font-display font-bold text-xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:scale-105 group-hover:rotate-2">
+                                LN
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Leila Ndiaye</h4>
+                            <p class="text-sm font-semibold text-[#6aabaf] mt-1 mb-3">Events Director</p>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">Orchestrating cross-university symposiums and public health awareness drives.</p>
                         </div>
                         </div>
                         <div class="flex justify-center gap-2 mt-8" id="exco-dots"></div>
@@ -360,53 +513,132 @@
                 </div>
             </section>
 
-            <!-- KNOWLEDGE BASE BRIEF -->
-            <section id="articles" class="py-16 md:py-24 bg-transparent">
+            <!-- EVENTS PREVIEW (HOME) -->
+            <section id="events-preview" class="py-16 md:py-24 bg-white/40 border-y border-slate-100">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6 mb-10 md:mb-16">
                         <div>
-                            <span class="text-sm font-bold tracking-wide text-[#8a9478] uppercase block">Knowledge Base</span>
-                            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800 mt-2">Latest Insights & Analysis</h2>
+                            <span class="text-sm font-bold tracking-wide text-indigo-500 uppercase block">Symposiums & Presentations</span>
+                            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800 mt-2">Academic Events & Field Studies</h2>
                         </div>
-                        <a href="#" @click.prevent="currentRoute = 'articles'; window.scrollTo(0,0);" class="group text-sm font-semibold text-[#6aabaf] flex items-center gap-2 border-b-2 border-[#B3DEE2] pb-1 shrink-0">
-                            View full student journal <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        <a href="#" @click.prevent="currentRoute = 'events'; activeTab = 'events'; window.scrollTo(0,0);" class="group text-sm font-semibold text-indigo-500 flex items-center gap-2 border-b-2 border-indigo-200 pb-1 shrink-0">
+                            View full academic calendar <i data-lucide="arrow-right" class="w-4 h-4"></i>
                         </a>
                     </div>
 
-                    <!-- REUSABLE BLOG LIST COMPONENT -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
-                        <article class="group cursor-pointer" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
-                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-white border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
-                                <div class="absolute inset-0 bg-gradient-to-tr from-[#B3DEE2] to-[#CCD5AE] opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                                <i data-lucide="database" class="w-8 h-8 text-slate-300"></i>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16">
+                        <!-- Upcoming Events -->
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-4 flex items-center gap-3">
+                                <i data-lucide="calendar" class="w-5 h-5 text-indigo-500"></i> Upcoming
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-white border border-slate-100 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 md:gap-5 hover:border-indigo-200 transition-colors group cursor-pointer" @click.prevent="currentRoute = 'events'; activeTab = 'events'; window.scrollTo(0,0);">
+                                    <div class="flex sm:flex-col items-center justify-between sm:justify-center bg-indigo-50 text-indigo-600 rounded-xl px-4 py-3 sm:py-2 min-w-[70px] shrink-0 h-fit">
+                                        <span class="text-xs font-bold uppercase tracking-wider">Sep</span>
+                                        <span class="text-lg sm:text-2xl font-bold leading-none sm:mt-1">14</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">Annual Zoonotic Pathogens Symposium</h4>
+                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2">Undergraduate presentations on the architectural spillover mechanics resulting from aggressive deforestation in the Amazon basin.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white border border-slate-100 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 md:gap-5 hover:border-indigo-200 transition-colors group cursor-pointer" @click.prevent="currentRoute = 'events'; activeTab = 'events'; window.scrollTo(0,0);">
+                                    <div class="flex sm:flex-col items-center justify-between sm:justify-center bg-indigo-50 text-indigo-600 rounded-xl px-4 py-3 sm:py-2 min-w-[70px] shrink-0 h-fit">
+                                        <span class="text-xs font-bold uppercase tracking-wider">Oct</span>
+                                        <span class="text-lg sm:text-2xl font-bold leading-none sm:mt-1">02</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">Estuary Soil Sampling Field Project</h4>
+                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2">Longitudinal data collection trip to map nitrate runoff and soil health variance across primary agricultural zones.</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="space-y-2">
-                                <span class="text-sm font-semibold tracking-wide text-[#6aabaf]">Epidemiology</span>
+                        </div>
+
+                        <!-- Past Events -->
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-4 flex items-center gap-3">
+                                <i data-lucide="clock" class="w-5 h-5 text-slate-400"></i> Past Archives
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-slate-50/80 border border-slate-100 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 md:gap-5 opacity-80 hover:opacity-100 transition-opacity">
+                                    <div class="flex sm:flex-col items-center justify-between sm:justify-center bg-slate-200 text-slate-600 rounded-xl px-4 py-3 sm:py-2 min-w-[70px] shrink-0 h-fit grayscale">
+                                        <span class="text-xs font-bold uppercase tracking-wider">May</span>
+                                        <span class="text-lg sm:text-2xl font-bold leading-none sm:mt-1">21</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-base font-bold text-slate-800">Spring Publication Defense</h4>
+                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2">Graduating student members successfully presented peer-reviewed marine ecosystems research to the faculty board.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-50/80 border border-slate-100 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 md:gap-5 opacity-80 hover:opacity-100 transition-opacity">
+                                    <div class="flex sm:flex-col items-center justify-between sm:justify-center bg-slate-200 text-slate-600 rounded-xl px-4 py-3 sm:py-2 min-w-[70px] shrink-0 h-fit grayscale">
+                                        <span class="text-xs font-bold uppercase tracking-wider">Apr</span>
+                                        <span class="text-lg sm:text-2xl font-bold leading-none sm:mt-1">10</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-base font-bold text-slate-800">Antimicrobial Resistance Workshop</h4>
+                                        <p class="text-sm text-slate-600 mt-1 line-clamp-2">Data modeling workshop utilizing machine learning to track agricultural antibiotic overuse.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KNOWLEDGE BASE BRIEF -->
+            <section id="articles" class="py-16 md:py-24 bg-transparent relative overflow-hidden">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 relative z-10">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6 mb-10 md:mb-16">
+                        <div>
+                            <span class="text-sm font-bold tracking-wide text-[#8a9478] uppercase block">Academic Journal</span>
+                            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800 mt-2">Latest Student Publications</h2>
+                        </div>
+                        <a href="#" @click.prevent="currentRoute = 'articles'; activeTab = 'articles'; window.scrollTo(0,0);" class="group text-sm font-semibold text-[#6aabaf] flex items-center gap-2 border-b-2 border-[#B3DEE2] pb-1 shrink-0">
+                            Read the student journal <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+
+                    <!-- REUSABLE BLOG LIST COMPONENT (HOME PREVIEW) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+                        <article class="group cursor-pointer flex flex-col" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
+                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-slate-100 border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
+                                <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Deforestation" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                            </div>
+                            <div class="space-y-2 flex flex-col flex-1">
+                                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] uppercase">Epidemiology</span>
                                 <h3 class="text-xl font-bold text-slate-800 group-hover:text-[#6aabaf] transition-colors">The Architecture of Spillover: How Deforestation Promotes Pandemics</h3>
                                 <p class="text-base text-slate-600 font-normal line-clamp-2">As agricultural borders encroach deeper into natural rainforest biomes, contact between humans and wildlife increases — raising the risk of disease crossing between species.</p>
                             </div>
                         </article>
 
-                        <article class="group cursor-pointer" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
-                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-white border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
-                                <div class="absolute inset-0 bg-gradient-to-tr from-[#B3DEE2] to-[#CCD5AE] opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                                <i data-lucide="activity" class="w-8 h-8 text-slate-300"></i>
+                        <article class="group cursor-pointer flex flex-col" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
+                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-slate-100 border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
+                                <img src="https://images.unsplash.com/photo-1621451537084-482c73073a0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Microplastics" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
                             </div>
-                            <div class="space-y-2">
-                                <span class="text-sm font-semibold tracking-wide text-[#6aabaf]">Marine Ecosystems</span>
+                            <div class="space-y-2 flex flex-col flex-1">
+                                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] uppercase">Marine Ecosystems</span>
                                 <h3 class="text-xl font-bold text-slate-800 group-hover:text-[#6aabaf] transition-colors">Microplastics as Chemical Vectors in Marine Food Webs</h3>
                                 <p class="text-base text-slate-600 font-normal line-clamp-2">How synthetic marine pollutants move through aquaculture and coastal food chains, eventually reaching the meals on our tables.</p>
                             </div>
                         </article>
 
-                        <article class="group cursor-pointer" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
-                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-white border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
-                                <div class="absolute inset-0 bg-gradient-to-tr from-[#CCD5AE] to-[#B3DEE2] opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                                <i data-lucide="layers" class="w-8 h-8 text-slate-300"></i>
+                        <article class="group cursor-pointer flex flex-col" @click="currentRoute = 'articles'; window.scrollTo(0,0);">
+                            <div class="relative w-full aspect-[16/10] rounded-[24px] bg-slate-100 border border-slate-100 overflow-hidden mb-6 flex items-center justify-center shadow-sm">
+                                <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Agriculture" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
                             </div>
-                            <div class="space-y-2">
-                                <span class="text-sm font-semibold tracking-wide text-amber-600">Agriculture</span>
-                                <h3 class="text-xl font-bold text-slate-800 group-hover:text-[#6aabaf] transition-colors">Regenerative Farming: Soil Biomes as Essential Public Health Assets</h3>
+                            <div class="space-y-2 flex flex-col flex-1">
+                                <span class="text-sm font-semibold tracking-wide text-amber-600 uppercase">Agriculture</span>
+                                <h3 class="text-xl font-bold text-slate-800 group-hover:text-amber-600 transition-colors">Regenerative Farming: Soil Biomes as Essential Public Health Assets</h3>
                                 <p class="text-base text-slate-600 font-normal line-clamp-2">Industrial pesticide use can disrupt the microbial life in soil that naturally protects crops, nutrients, and local water tables.</p>
                             </div>
                         </article>
@@ -415,23 +647,35 @@
             </section>
 
             <!-- INTEGRATED NEWSLETTER INTAKE SYSTEM -->
-            <section id="newsletter" class="py-16 md:py-32 relative bg-transparent">
-                <div class="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 text-center space-y-6 md:space-y-8">
-                    <div class="w-12 h-12 rounded-xl bg-[#B3DEE2]/40 border border-[#B3DEE2] shadow-sm flex items-center justify-center mx-auto text-slate-800">
-                        <i data-lucide="mail" class="w-5 h-5 text-[#6aabaf]"></i>
+            <section id="newsletter" class="py-16 md:py-32 relative bg-transparent overflow-hidden">
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+                        <div class="hidden md:flex justify-center relative">
+                            <div class="absolute inset-0 bg-gradient-to-tr from-[#B3DEE2]/40 to-[#CCD5AE]/40 rounded-[40px] blur-2xl transform -rotate-6"></div>
+                            <div class="relative z-10 drop-shadow-2xl border-b-2 border-slate-200/50 pb-2">
+                                <img src="assets/research_img.png" alt="Research graphic" class="w-full max-w-[400px] object-contain opacity-80">
+                            </div>
+                        </div>
+                        <div class="space-y-6 md:space-y-8 text-center md:text-left">
+                            <div class="w-12 h-12 rounded-xl bg-[#B3DEE2]/40 border border-[#B3DEE2] shadow-sm flex items-center justify-center mx-auto md:mx-0 text-slate-800">
+                                <i data-lucide="mail" class="w-5 h-5 text-[#6aabaf]"></i>
+                            </div>
+                            <div>
+                                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block mb-2">Stay Connected</span>
+                                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800 leading-tight">Get our bi-weekly newsletter.</h2>
+                            </div>
+                            <p class="text-base text-slate-600 font-normal leading-relaxed">
+                                Receive updates on global health trends, climate research, society events, and student publications — curated by our executive team.
+                            </p>
+                            
+                            <form class="flex flex-col gap-3 md:block md:relative md:p-1.5 md:rounded-full md:border md:border-[#B3DEE2] md:bg-white/80 md:backdrop-blur-md md:focus-within:border-[#6aabaf] md:focus-within:bg-white transition-all duration-300" @submit.prevent="alert('Thank you for subscribing to our newsletter!')">
+                                <input type="email" required placeholder="yourname@gmail.com" class="w-full bg-white/80 md:bg-transparent border border-[#B3DEE2] md:border-0 rounded-xl md:rounded-none pl-5 pr-5 md:pr-36 py-3.5 md:py-3 text-base md:text-sm font-medium text-slate-700 focus:outline-none focus:border-[#6aabaf]">
+                                <button type="submit" class="w-full md:w-auto md:absolute md:right-1.5 bg-slate-700 text-white px-5 py-3.5 md:py-3 rounded-xl md:rounded-full text-sm font-semibold hover:bg-slate-600 transition-colors">
+                                    Subscribe
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Stay Connected</span>
-                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-800 leading-tight">Get our bi-weekly newsletter.</h2>
-                    <p class="text-base text-slate-600 font-normal max-w-lg mx-auto leading-relaxed">
-                        Receive updates on global health trends, climate research, society events, and student publications — curated by our executive team.
-                    </p>
-                    
-                    <form class="max-w-md mx-auto flex flex-col gap-3 md:block md:relative md:p-1.5 md:rounded-full md:border md:border-[#B3DEE2] md:bg-white/80 md:backdrop-blur-md md:focus-within:border-[#6aabaf] md:focus-within:bg-white transition-all duration-300" @submit.prevent="alert('Thank you for subscribing to our newsletter!')">
-                        <input type="email" required placeholder="you@university.edu" class="w-full bg-white/80 md:bg-transparent border border-[#B3DEE2] md:border-0 rounded-xl md:rounded-none pl-5 pr-5 md:pr-36 py-3.5 md:py-3 text-base md:text-sm font-medium text-slate-700 focus:outline-none focus:border-[#6aabaf]">
-                        <button type="submit" class="w-full md:w-auto md:absolute md:right-1.5 bg-slate-700 text-white px-5 py-3.5 md:py-3 rounded-xl md:rounded-full text-sm font-semibold hover:bg-slate-600 transition-colors">
-                            Subscribe
-                        </button>
-                    </form>
                 </div>
             </section>
 
@@ -446,7 +690,7 @@
                             Join our student society to work alongside research scientists, participate in local ecological field projects, and contribute to global collaborative policy efforts.
                         </p>
                         <div class="flex flex-col gap-3 text-sm font-medium text-[#CCD5AE]/90 pt-4">
-                            <div class="flex items-center gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-[#B3DEE2]"></i> Academic Credits</div>
+                            <div class="flex items-center gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-[#CCD5AE]"></i> Academic Credits</div>
                             <div class="flex items-center gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-[#CCD5AE]"></i> Field Experience</div>
                         </div>
                     </div>
@@ -458,8 +702,8 @@
                                     <input type="text" required placeholder="Jane Doe" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#B3DEE2]">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-[#B3DEE2]/80 mb-2">Academic Email</label>
-                                    <input type="email" required placeholder="jane.doe@university.edu" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#B3DEE2]">
+                                    <label class="block text-sm font-semibold text-[#B3DEE2]/80 mb-2">Email</label>
+                                    <input type="email" required placeholder="jane.doe@gmail.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#B3DEE2]">
                                 </div>
                             </div>
                             <div>
@@ -481,96 +725,302 @@
         </div>
 
         <!-- ROUTE 2: ABOUT MODULE -->
-        <div x-show="currentRoute === 'about'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-12 md:space-y-16">
-            <div class="space-y-4">
-                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">About Us</span>
-                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">A society built on connection, not silos.</h1>
+        <div x-show="currentRoute === 'about'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-12 md:space-y-16 relative">
+            <div class="absolute bottom-0 right-0 md:right-10 w-[240px] sm:w-[320px] md:w-[480px] pointer-events-none mix-blend-multiply origin-bottom opacity-20 md:opacity-40 border-b-2 border-slate-200/50 pb-2 z-0">
+                <img src="assets/one_health.png" alt="" class="w-full h-auto" aria-hidden="true">
+            </div>
+            <div class="relative z-10 space-y-4">
+                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Institutional Overview</span>
+                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">Bridging the gap between distinct academic disciplines.</h1>
                 <p class="text-slate-600 text-base font-normal max-w-3xl leading-relaxed">
-                    Founded by students who believe human wellbeing depends on the health of our planet, we bring together people from medicine, veterinary science, ecology, and public health. We work as a bridge between university departments and the wider world.
+                    Founded by students committed to the principle that human wellbeing is inextricably linked to planetary health, our society integrates research from medicine, veterinary science, ecology, and public health into a unified framework.
                 </p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
                 <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[24px]">
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">Guided by Global Standards</h3>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Guided by Global Frameworks</h3>
                     <p class="text-base text-slate-600 leading-relaxed font-normal">
-                        Our work aligns with guidelines from the World Health Organization (WHO) and the Food and Agriculture Organization (FAO), keeping our research grounded in trusted international frameworks.
+                        Our methodological approach and student publishing criteria align strictly with contemporary guidelines established by the World Health Organization (WHO) and the Food and Agriculture Organization (FAO).
                     </p>
                 </div>
                 <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[24px]">
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">Open to All Students</h3>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Research Accessibility</h3>
                     <p class="text-base text-slate-600 leading-relaxed font-normal">
-                        Whether you're in the lab, in the field, or behind a desk, we offer research exposure, mentorship, and hands-on opportunities to learn how health connects across species and ecosystems.
+                        Whether analyzing genomic data in the lab, sampling ecosystems in the field, or modeling public health policy, we facilitate cross-disciplinary mentorship to advance undergraduate and graduate research output.
                     </p>
                 </div>
             </div>
         </div>
 
         <!-- ROUTE 3: EVENTS CALENDAR MODULE -->
-        <div x-show="currentRoute === 'events'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-10 md:space-y-12">
+        <div x-show="currentRoute === 'events'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-10 md:space-y-12" x-data="{ filter: 'all' }">
             <div class="space-y-4">
-                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Upcoming Events</span>
+                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Academic Calendar</span>
                 <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">Symposiums & Field Projects</h1>
+                <p class="text-slate-600 text-base font-normal">Join fellow society members for upcoming research events, workshops, and hands-on field studies.</p>
             </div>
             
-            <div class="space-y-4 pt-6">
-                <!-- Event 1 -->
-                <div class="bg-white/60 backdrop-blur-md border border-slate-100 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-lg transition-all">
-                    <div class="space-y-1">
-                        <span class="text-sm font-semibold text-[#6aabaf] tracking-wide block">September 14, 2026</span>
-                        <h3 class="text-lg font-bold text-slate-800">One Health Symposium: Disease & the Environment</h3>
-                        <p class="text-base text-slate-600 font-normal">A day of talks and workshops exploring how habitat loss and climate change shape the spread of disease between wildlife and people.</p>
-                    </div>
-                    <span class="bg-[#6aabaf] text-white text-sm font-semibold px-4 py-2.5 rounded-full w-full sm:w-auto text-center">Register</span>
+            <div class="space-y-8 pt-6">
+                <!-- Filters -->
+                <div class="flex flex-nowrap md:flex-wrap gap-2 md:gap-3 overflow-x-auto pb-4 md:pb-0 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <button @click="filter = 'all'" :class="filter === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'" class="snap-start shrink-0 px-5 py-2 rounded-full border text-sm font-medium transition-all duration-300">All Events</button>
+                    <button @click="filter = 'upcoming'" :class="filter === 'upcoming' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'" class="snap-start shrink-0 px-5 py-2 rounded-full border text-sm font-medium transition-all duration-300">Upcoming</button>
+                    <button @click="filter = 'past'" :class="filter === 'past' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'" class="snap-start shrink-0 px-5 py-2 rounded-full border text-sm font-medium transition-all duration-300">Past Archives</button>
+                    <button @click="filter = 'field'" :class="filter === 'field' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'" class="snap-start shrink-0 px-5 py-2 rounded-full border text-sm font-medium transition-all duration-300">Field Work</button>
+                    <button @click="filter = 'symposium'" :class="filter === 'symposium' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'" class="snap-start shrink-0 px-5 py-2 rounded-full border text-sm font-medium transition-all duration-300">Symposiums</button>
                 </div>
 
-                <!-- Event 2 -->
-                <div class="bg-white/60 backdrop-blur-md border border-slate-100 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-lg transition-all">
-                    <div class="space-y-1">
-                        <span class="text-sm font-semibold text-[#6aabaf] tracking-wide block">October 02, 2026</span>
-                        <h3 class="text-lg font-bold text-slate-800">Estuary Soil & Water Field Study</h3>
-                        <p class="text-base text-slate-600 font-normal">A hands-on field trip to map soil health and nutrient runoff along a coastal estuary — open to all society members.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Event 1 (Upcoming, Symposium) -->
+                        <div x-show="filter === 'all' || filter === 'upcoming' || filter === 'symposium'" class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-[#B3DEE2]/20 hover:border-[#B3DEE2] transition-all cursor-pointer">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-100 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1544928147-79a2dbc1f389?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Symposium event" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                    <i data-lucide="mic" class="w-3 h-3"></i> Symposium
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-[#6aabaf] tracking-wide mb-2">Sep 14, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors">Annual Zoonotic Pathogens Symposium</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">Undergraduate presentations on the architectural spillover mechanics resulting from aggressive deforestation in the Amazon basin.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 2 (Upcoming, Field Work) -->
+                        <div x-show="filter === 'all' || filter === 'upcoming' || filter === 'field'" class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-[#B3DEE2]/20 hover:border-[#B3DEE2] transition-all cursor-pointer">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-100 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Field Work" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                    <i data-lucide="map" class="w-3 h-3"></i> Field Work
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-[#6aabaf] tracking-wide mb-2">Oct 02, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-emerald-600 transition-colors">Estuary Soil Sampling Field Project</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">Longitudinal data collection trip to map nitrate runoff and soil health variance across primary agricultural zones.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 3 (Upcoming, Symposium) -->
+                        <div x-show="filter === 'all' || filter === 'upcoming' || filter === 'symposium'" class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-[#B3DEE2]/20 hover:border-[#B3DEE2] transition-all cursor-pointer">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-100 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Ethics Panel" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                    <i data-lucide="mic" class="w-3 h-3"></i> Symposium
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-[#6aabaf] tracking-wide mb-2">Nov 15, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors">Global Health Ethics Panel</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">A faculty-led discussion on the ethics of wildlife intervention, vaccination strategies, and indigenous land rights.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 4 (Upcoming, Field Work) -->
+                        <div x-show="filter === 'all' || filter === 'upcoming' || filter === 'field'" class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-[#B3DEE2]/20 hover:border-[#B3DEE2] transition-all cursor-pointer">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-100 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Urban Wildlife" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                    <i data-lucide="map" class="w-3 h-3"></i> Field Work
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-[#6aabaf] tracking-wide mb-2">Dec 05, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-emerald-600 transition-colors">Urban Wildlife Tracking</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">Setting up camera traps and tracking stations to monitor urban coyote and raccoon populations near the campus.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 5 (Past, Symposium) -->
+                        <div x-show="filter === 'all' || filter === 'past' || filter === 'symposium'" class="bg-slate-50/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-lg transition-all opacity-80 hover:opacity-100 cursor-pointer grayscale hover:grayscale-0">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-200 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Defense" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 group-hover:text-indigo-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors">
+                                    <i data-lucide="mic" class="w-3 h-3"></i> Symposium
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-slate-500 tracking-wide mb-2">May 21, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3">Spring Publication Defense</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">Graduating student members successfully presented peer-reviewed marine ecosystems research to the faculty board.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 6 (Past, Symposium) -->
+                        <div x-show="filter === 'all' || filter === 'past' || filter === 'symposium'" class="bg-slate-50/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-lg transition-all opacity-80 hover:opacity-100 cursor-pointer grayscale hover:grayscale-0">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-200 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Workshop" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 group-hover:text-indigo-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors">
+                                    <i data-lucide="mic" class="w-3 h-3"></i> Symposium
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-slate-500 tracking-wide mb-2">Apr 10, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3">Antimicrobial Resistance Workshop</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">Data modeling workshop utilizing machine learning to track agricultural antibiotic overuse across regional farms.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 7 (Past, Field Work) -->
+                        <div x-show="filter === 'all' || filter === 'past' || filter === 'field'" class="bg-slate-50/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-lg transition-all opacity-80 hover:opacity-100 cursor-pointer grayscale hover:grayscale-0">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-200 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1615529151169-7b1ff50dc7f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Beach" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 group-hover:text-emerald-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors">
+                                    <i data-lucide="map" class="w-3 h-3"></i> Field Work
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-slate-500 tracking-wide mb-2">Mar 02, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3">Microplastics Coastal Survey</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">A weekend expedition collecting water and sand samples to measure microplastic density along the eastern shoreline.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 8 (Past, Symposium) -->
+                        <div x-show="filter === 'all' || filter === 'past' || filter === 'symposium'" class="bg-slate-50/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-lg transition-all opacity-80 hover:opacity-100 cursor-pointer grayscale hover:grayscale-0">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-200 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Mixer" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 group-hover:text-indigo-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors">
+                                    <i data-lucide="mic" class="w-3 h-3"></i> Symposium
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-slate-500 tracking-wide mb-2">Feb 18, 2026</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3">Climate & Epidemiology Mixer</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">Networking event bringing together public health majors and ecology students to discuss collaborative research ideas.</p>
+                            </div>
+                        </div>
+
+                        <!-- Event 9 (Past, Field Work) -->
+                        <div x-show="filter === 'all' || filter === 'past' || filter === 'field'" class="bg-slate-50/60 backdrop-blur-md border border-slate-100 rounded-[24px] overflow-hidden flex flex-col group hover:shadow-lg transition-all opacity-80 hover:opacity-100 cursor-pointer grayscale hover:grayscale-0">
+                            <div class="relative w-full aspect-[16/10] bg-slate-200 border-b border-slate-200 flex items-center justify-center overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1444464666168-49b626d49cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Bird" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 group-hover:text-emerald-600 uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors">
+                                    <i data-lucide="map" class="w-3 h-3"></i> Field Work
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-1">
+                                <span class="text-sm font-semibold text-slate-500 tracking-wide mb-2">Nov 11, 2025</span>
+                                <h3 class="text-xl font-bold text-slate-800 mb-3">Avian Flu Monitoring</h3>
+                                <p class="text-base text-slate-600 font-normal line-clamp-3">Assisting local wildlife rehabilitators with taking swabs and tracking migratory bird health metrics.</p>
+                            </div>
+                        </div>
+
                     </div>
-                    <span class="bg-[#6aabaf] text-white text-sm font-semibold px-4 py-2.5 rounded-full w-full sm:w-auto text-center">Register</span>
-                </div>
             </div>
         </div>
 
         <!-- ROUTE 4: FULL DEDICATED JOURNAL NODE MODULE -->
-        <div x-show="currentRoute === 'articles'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-10 md:space-y-12">
-            <div class="space-y-4">
-                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Student Journal</span>
-                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">Latest Insights & Analysis</h1>
-                <p class="text-slate-600 text-base font-normal">Articles written by student members and reviewed by our faculty advisors.</p>
+        <div x-show="currentRoute === 'articles'" x-transition:enter="transition ease-out duration-500" class="w-full pt-28 md:pt-40 pb-16 md:pb-24 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 space-y-10 md:space-y-12 relative">
+            <div class="relative z-10 space-y-4">
+                <span class="text-sm font-semibold tracking-wide text-[#6aabaf] block">Academic Journal Archive</span>
+                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">Peer-Reviewed Student Research</h1>
+                <p class="text-slate-600 text-base font-normal">Empirical findings and literature reviews published by society members under faculty supervision.</p>
             </div>
 
             <!-- Complete Journal Listing -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
-                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[32px] space-y-4">
-                    <span class="text-sm font-semibold text-[#6aabaf] tracking-wide">Epidemiology</span>
-                    <h3 class="text-2xl font-bold text-slate-800 tracking-tight leading-tight">The Architecture of Spillover: How Deforestation Promotes Pandemics</h3>
-                    <p class="text-base text-slate-600 font-normal leading-relaxed">
-                        As agricultural borders encroach deeper into natural rainforest biomes, contact between humans and wildlife increases — raising the risk of disease crossing between species.
-                    </p>
-                    <div class="text-sm font-medium text-slate-400 pt-2 flex items-center gap-4"><span>Published June 24, 2026</span><span>•</span><span>5 min read</span></div>
+                
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[32px] overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-[#B3DEE2]/20 hover:border-[#B3DEE2] transition-all flex flex-col">
+                    <div class="relative w-full aspect-[16/9] md:aspect-[16/10] overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Deforestation" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col flex-1 space-y-3 md:space-y-4">
+                        <span class="text-xs md:text-sm font-semibold text-[#6aabaf] tracking-wide uppercase">Epidemiology</span>
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight group-hover:text-[#6aabaf] transition-colors">The Architecture of Spillover: How Deforestation Promotes Pandemics</h3>
+                        <p class="text-sm md:text-base text-slate-600 font-normal leading-relaxed line-clamp-3">
+                            As agricultural borders encroach deeper into natural rainforest biomes, contact between humans and wildlife increases — raising the risk of disease crossing between species.
+                        </p>
+                        <div class="text-xs md:text-sm font-medium text-slate-400 pt-2 flex items-center gap-2 md:gap-4 mt-auto"><span>Published June 24, 2026</span><span>•</span><span>5 min read</span></div>
+                    </div>
                 </div>
 
-                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[32px] space-y-4">
-                    <span class="text-sm font-semibold text-[#6aabaf] tracking-wide">Marine Ecosystems</span>
-                    <h3 class="text-2xl font-bold text-slate-800 tracking-tight leading-tight">Microplastics as Chemical Vectors in Marine Food Webs</h3>
-                    <p class="text-base text-slate-600 font-normal leading-relaxed">
-                        How synthetic marine pollutants move through aquaculture and coastal food chains, eventually reaching the meals on our tables.
-                    </p>
-                    <div class="text-sm font-medium text-slate-400 pt-2 flex items-center gap-4"><span>Published June 18, 2026</span><span>•</span><span>8 min read</span></div>
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[32px] overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-[#B3DEE2]/20 hover:border-[#B3DEE2] transition-all flex flex-col">
+                    <div class="relative w-full aspect-[16/9] md:aspect-[16/10] overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1621451537084-482c73073a0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Microplastics" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col flex-1 space-y-3 md:space-y-4">
+                        <span class="text-xs md:text-sm font-semibold text-[#6aabaf] tracking-wide uppercase">Marine Ecosystems</span>
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight group-hover:text-[#6aabaf] transition-colors">Microplastics as Chemical Vectors in Marine Food Webs</h3>
+                        <p class="text-sm md:text-base text-slate-600 font-normal leading-relaxed line-clamp-3">
+                            How synthetic marine pollutants move through aquaculture and coastal food chains, eventually reaching the meals on our tables.
+                        </p>
+                        <div class="text-xs md:text-sm font-medium text-slate-400 pt-2 flex items-center gap-2 md:gap-4 mt-auto"><span>Published June 18, 2026</span><span>•</span><span>8 min read</span></div>
+                    </div>
                 </div>
 
-                <div class="bg-white/60 backdrop-blur-md p-8 border border-slate-100 rounded-[32px] space-y-4">
-                    <span class="text-sm font-semibold text-amber-600 tracking-wide">Agriculture</span>
-                    <h3 class="text-2xl font-bold text-slate-800 tracking-tight leading-tight">Regenerative Farming: Soil Biomes as Essential Public Health Assets</h3>
-                    <p class="text-base text-slate-600 font-normal leading-relaxed">
-                        Industrial pesticide use can disrupt the microbial life in soil that naturally protects crops, nutrients, and local water tables.
-                    </p>
-                    <div class="text-sm font-medium text-slate-400 pt-2 flex items-center gap-4"><span>Published June 11, 2026</span><span>•</span><span>4 min read</span></div>
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[32px] overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-amber-200/20 hover:border-amber-200 transition-all flex flex-col">
+                    <div class="relative w-full aspect-[16/9] md:aspect-[16/10] overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Agriculture" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col flex-1 space-y-3 md:space-y-4">
+                        <span class="text-xs md:text-sm font-semibold text-amber-600 tracking-wide uppercase">Agriculture</span>
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight group-hover:text-amber-600 transition-colors">Regenerative Farming: Soil Biomes as Essential Public Health Assets</h3>
+                        <p class="text-sm md:text-base text-slate-600 font-normal leading-relaxed line-clamp-3">
+                            Industrial pesticide use can disrupt the microbial life in soil that naturally protects crops, nutrients, and local water tables.
+                        </p>
+                        <div class="text-xs md:text-sm font-medium text-slate-400 pt-2 flex items-center gap-2 md:gap-4 mt-auto"><span>Published June 11, 2026</span><span>•</span><span>4 min read</span></div>
+                    </div>
                 </div>
+
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[32px] overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-indigo-200/20 hover:border-indigo-200 transition-all flex flex-col">
+                    <div class="relative w-full aspect-[16/9] md:aspect-[16/10] overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1532187643603-c11c52b75a1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Urban Planning" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col flex-1 space-y-3 md:space-y-4">
+                        <span class="text-xs md:text-sm font-semibold text-indigo-500 tracking-wide uppercase">Urban Planning</span>
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight group-hover:text-indigo-500 transition-colors">City Layouts and Avian Migration Patterns</h3>
+                        <p class="text-sm md:text-base text-slate-600 font-normal leading-relaxed line-clamp-3">
+                            Investigating how light pollution and glass architecture disrupt migratory bird routes, leading to isolated population declines.
+                        </p>
+                        <div class="text-xs md:text-sm font-medium text-slate-400 pt-2 flex items-center gap-2 md:gap-4 mt-auto"><span>Published May 30, 2026</span><span>•</span><span>6 min read</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[32px] overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-rose-200/20 hover:border-rose-200 transition-all flex flex-col">
+                    <div class="relative w-full aspect-[16/9] md:aspect-[16/10] overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1582719471384-894fbb16e074?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Veterinary" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col flex-1 space-y-3 md:space-y-4">
+                        <span class="text-xs md:text-sm font-semibold text-rose-500 tracking-wide uppercase">Veterinary Science</span>
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight group-hover:text-rose-500 transition-colors">Tracking Vector-Borne Diseases in Domestic Pets</h3>
+                        <p class="text-sm md:text-base text-slate-600 font-normal leading-relaxed line-clamp-3">
+                            How shifting climate zones are expanding the habitable areas for ticks and mosquitoes, placing domestic dogs and cats at higher risk.
+                        </p>
+                        <div class="text-xs md:text-sm font-medium text-slate-400 pt-2 flex items-center gap-2 md:gap-4 mt-auto"><span>Published May 15, 2026</span><span>•</span><span>7 min read</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-md border border-slate-100 rounded-[32px] overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-emerald-200/20 hover:border-emerald-200 transition-all flex flex-col">
+                    <div class="relative w-full aspect-[16/9] md:aspect-[16/10] overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Water Systems" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col flex-1 space-y-3 md:space-y-4">
+                        <span class="text-xs md:text-sm font-semibold text-emerald-600 tracking-wide uppercase">Water Systems</span>
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight group-hover:text-emerald-600 transition-colors">Algal Blooms and Local Drinking Supplies</h3>
+                        <p class="text-sm md:text-base text-slate-600 font-normal leading-relaxed line-clamp-3">
+                            Analyzing the downstream effects of agricultural runoff on freshwater reservoirs and the resulting toxic cyanobacteria blooms.
+                        </p>
+                        <div class="text-xs md:text-sm font-medium text-slate-400 pt-2 flex items-center gap-2 md:gap-4 mt-auto"><span>Published May 02, 2026</span><span>•</span><span>5 min read</span></div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -778,6 +1228,13 @@
             track.addEventListener('mouseleave', () => { paused = false; resetTimer(); });
             track.addEventListener('touchstart', () => { paused = true; if (timer) clearInterval(timer); }, { passive: true });
             track.addEventListener('touchend', () => { setTimeout(() => { paused = false; resetTimer(); }, 3000); }, { passive: true });
+
+            track.addEventListener('wheel', (evt) => {
+                if (evt.deltaY !== 0) {
+                    evt.preventDefault();
+                    track.scrollBy({ left: evt.deltaY > 0 ? 300 : -300, behavior: 'smooth' });
+                }
+            }, { passive: false });
 
             resetTimer();
         }
