@@ -1,0 +1,6 @@
+export enum EmailJobStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  FAILED = 'FAILED',
+  COMPLETED = 'COMPLETED',
+}

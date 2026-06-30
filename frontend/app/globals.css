@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+
+  --color-sage: #CCD5AE;
+  --color-aqua: #B3DEE2;
+  --color-sage-dark: #8a9478;
+  --color-aqua-dark: #6aabaf;
+  --color-text-primary: #334155;
+  --color-text-muted: #475569;
+}
+
+:root {
+  --sage: #CCD5AE;
+  --aqua: #B3DEE2;
+  --sage-dark: #8a9478;
+  --aqua-dark: #6aabaf;
+  --text-primary: #334155;
+  --text-muted: #475569;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  background-color: #f7f9f4;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #6b7560 0%, #4a8a92 50%, #7aa8ae 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--aqua);
+  border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sage-dark);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-track {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.carousel-slide {
+  scroll-snap-align: center;
+}
+
+@media (max-width: 767px) {
+  body {
+      font-size: 16px;
+  }
+  #mainHeader {
+      top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+.btn-liquid {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+.btn-liquid::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: #B3DEE2;
+  border-radius: 40%;
+  opacity: 0;
+  transition: top 0.9s ease-in-out, opacity 0.7s ease-in-out;
+  z-index: -1;
+}
+.btn-liquid:hover::before {
+  top: -50%;
+  opacity: 1;
+  animation: spin-liquid 0.8s ease-out forwards;
+}
+@keyframes spin-liquid {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.btn-liquid:hover {
+  color: #334155 !important;
+}
+
+.edge-fade {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+
+.footer-watermark {
+  height: clamp(4.5rem, 12vw, 8rem);
+}
+.footer-watermark-text {
+  font-size: clamp(3.25rem, 14vw, 11rem);
+  transform: translateY(38%);
+}
+
+/* Admin rich text editor (TipTap) */
+.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: rgb(148 163 184);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.rich-text-editor .ProseMirror:focus {
+  outline: none;
+}

@@ -1,0 +1,356 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  AUTHOR
+  USER
+}
+
+enum NewsletterStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum EmailJobStatus {
+  PENDING
+  PROCESSING
+  FAILED
+  COMPLETED
+}
+
+enum EventStatus {
+  UPCOMING
+  PAST
+  CANCELLED
+}
+
+enum MembershipApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────
+// Users & Auth
+// ─────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  firstName    String?   @map("first_name")
+  lastName     String?   @map("last_name")
+  role         Role      @default(USER)
+  avatarUrl    String?   @map("avatar_url")
+  isActive     Boolean   @default(true) @map("is_active")
+  isVerified   Boolean   @default(false) @map("is_verified")
+  lastLogin    DateTime? @map("last_login")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  refreshTokens RefreshToken[]
+  newsletters   Newsletter[]
+  media         Media[]
+  auditLogs     AuditLog[]
+  pageViews     PageView[]
+
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique @map("token_hash")
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  isRevoked Boolean  @default(false) @map("is_revoked")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────
+// Content
+// ─────────────────────────────────────────────
+
+model Newsletter {
+  id             String           @id @default(uuid())
+  title          String
+  slug           String           @unique
+  excerpt        String?
+  content        String
+  featuredImage  String?          @map("featured_image")
+  status         NewsletterStatus @default(DRAFT)
+  publishedAt    DateTime?        @map("published_at")
+  scheduledAt    DateTime?        @map("scheduled_at")
+  authorId       String           @map("author_id")
+  seoTitle       String?          @map("seo_title")
+  seoDescription String?          @map("seo_description")
+  canonicalUrl   String?          @map("canonical_url")
+  ogImage        String?          @map("og_image")
+  searchVector   Unsupported("tsvector")? @map("search_vector")
+  readingTime    Int?             @map("reading_time")
+  viewCount      Int              @default(0) @map("view_count")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  deletedAt      DateTime?        @map("deleted_at")
+
+  author     User                 @relation(fields: [authorId], references: [id])
+  categories NewsletterCategory[]
+  media      Media[]
+  emailJobs  EmailJob[]
+  pageViews  PageView[]
+
+  @@index([slug])
+  @@index([title])
+  @@index([status])
+  @@index([authorId])
+  @@index([publishedAt])
+  @@index([deletedAt])
+  @@map("newsletters")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  newsletters NewsletterCategory[]
+
+  @@index([slug])
+  @@index([deletedAt])
+  @@map("categories")
+}
+
+model NewsletterCategory {
+  newsletterId String @map("newsletter_id")
+  categoryId   String @map("category_id")
+
+  newsletter Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([newsletterId, categoryId])
+  @@index([categoryId])
+  @@map("newsletter_categories")
+}
+
+// ─────────────────────────────────────────────
+// Media
+// ─────────────────────────────────────────────
+
+model Media {
+  id           String    @id @default(uuid())
+  filename     String
+  storageKey   String    @unique @map("storage_key")
+  publicUrl    String    @map("public_url")
+  mimeType     String    @map("mime_type")
+  size         Int
+  width        Int?
+  height       Int?
+  altText      String?   @map("alt_text")
+  uploadedById String    @map("uploaded_by")
+  newsletterId String?   @map("newsletter_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  uploadedBy User        @relation(fields: [uploadedById], references: [id])
+  newsletter Newsletter? @relation(fields: [newsletterId], references: [id], onDelete: SetNull)
+
+  @@index([uploadedById])
+  @@index([newsletterId])
+  @@index([storageKey])
+  @@index([deletedAt])
+  @@map("media")
+}
+
+// ─────────────────────────────────────────────
+// Subscribers
+// ─────────────────────────────────────────────
+
+model Subscriber {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  isVerified        Boolean  @default(false) @map("is_verified")
+  verificationToken String?  @unique @map("verification_token")
+  unsubscribeToken  String   @unique @map("unsubscribe_token")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("subscribers")
+}
+
+// ─────────────────────────────────────────────
+// Email Jobs
+// ─────────────────────────────────────────────
+
+model EmailJob {
+  id           String         @id @default(uuid())
+  newsletterId String         @map("newsletter_id")
+  status       EmailJobStatus @default(PENDING)
+  attempts     Int            @default(0)
+  scheduledFor DateTime?      @map("scheduled_for")
+  completedAt  DateTime?      @map("completed_at")
+  errorMessage String?        @map("error_message")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  newsletter Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([newsletterId])
+  @@map("email_jobs")
+}
+
+// ─────────────────────────────────────────────
+// Audit & Settings
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Singleton — always exactly one row; enforce in application layer
+model Setting {
+  id              String   @id @default(uuid())
+  siteName        String?  @map("site_name")
+  logo            String?
+  email           String?
+  phone           String?
+  facebook        String?
+  linkedin        String?
+  footer          String?
+  homepageBanner  String?  @map("homepage_banner")
+  maintenanceMode Boolean  @default(false) @map("maintenance_mode")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ─────────────────────────────────────────────
+// Analytics
+// ─────────────────────────────────────────────
+
+model PageView {
+  id           String   @id @default(uuid())
+  newsletterId String?  @map("newsletter_id")
+  userId       String?  @map("user_id")
+  ipAddress    String   @map("ip_address")
+  userAgent    String   @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  newsletter Newsletter? @relation(fields: [newsletterId], references: [id], onDelete: SetNull)
+  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([newsletterId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("page_views")
+}
+
+// ─────────────────────────────────────────────
+// Society content
+// ─────────────────────────────────────────────
+
+model Event {
+  id          String      @id @default(uuid())
+  title       String
+  slug        String      @unique
+  description String
+  location    String?
+  imageUrl    String?     @map("image_url")
+  startsAt    DateTime    @map("starts_at")
+  endsAt      DateTime?   @map("ends_at")
+  status      EventStatus @default(UPCOMING)
+  isFeatured  Boolean     @default(false) @map("is_featured")
+  sortOrder   Int         @default(0) @map("sort_order")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  deletedAt   DateTime?   @map("deleted_at")
+
+  @@index([slug])
+  @@index([status])
+  @@index([startsAt])
+  @@index([deletedAt])
+  @@map("events")
+}
+
+model ExcoMember {
+  id          String    @id @default(uuid())
+  name        String
+  role        String
+  description String
+  initials    String?
+  avatarUrl   String?   @map("avatar_url")
+  colorClass  String?   @map("color_class")
+  sortOrder   Int       @default(0) @map("sort_order")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@index([sortOrder])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("exco_members")
+}
+
+model MembershipApplication {
+  id        String                      @id @default(uuid())
+  fullName  String                      @map("full_name")
+  email     String
+  interest  String
+  status    MembershipApplicationStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime                    @default(now()) @map("created_at")
+  updatedAt DateTime                    @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([email])
+  @@index([createdAt])
+  @@map("membership_applications")
+}
